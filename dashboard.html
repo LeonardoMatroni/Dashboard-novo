@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Família Moto Express — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#F2F5F9;--bg2:#FFFFFF;--bg3:#EBF0F7;--bg4:#E0E8F4;
+  --border:#D4DCE9;--border2:#B8C6DA;
+  --text:#1C2B3A;--text2:#3E5068;--muted:#7E96AD;
+  --blue:#2563EB;--purple:#7C3AED;--teal:#0D9488;
+  --green:#16A34A;--amber:#D97706;--red:#DC2626;
+  --blue-bg:#EFF6FF;--green-bg:#F0FDF4;--amber-bg:#FFFBEB;--red-bg:#FEF2F2;--purple-bg:#F5F3FF;
+  --r:10px;--rl:14px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 14px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --sh-lg:0 12px 32px rgba(0,0,0,.1),0 4px 8px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg3)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── LAYOUT ──────────────────────────────────────────── */
+.shell{max-width:1440px;margin:0 auto}
+
+header{
+  padding:13px 28px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  background:#fff;position:sticky;top:0;z-index:100;box-shadow:var(--sh)
+}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-icon{
+  width:38px;height:38px;border-radius:9px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;font-weight:700;color:#fff;box-shadow:0 4px 10px rgba(37,99,235,.22)
+}
+.brand-name{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.brand-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.ped-badge{padding:4px 12px;border-radius:20px;background:var(--blue-bg);border:1px solid rgba(37,99,235,.2);font-size:12px;color:var(--blue);font-weight:600}
+
+/* ── TABS ────────────────────────────────────────────── */
+.tabs-bar{padding:0 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#fff}
+.tabs{display:flex;gap:0}
+.tab{
+  padding:13px 20px;border:none;border-bottom:2px solid transparent;cursor:pointer;
+  background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:500;
+  transition:all .15s;display:flex;align-items:center;gap:6px
+}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+.tab:hover:not(.active){color:var(--text2)}
+.tabs-right{font-size:11px;color:var(--muted);font-style:italic;padding:10px 0}
+
+/* ── FILTERS ─────────────────────────────────────────── */
+.filters{padding:10px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#fff}
+.fl{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+.ms-wrap{position:relative}
+.ms-btn{
+  padding:6px 11px;background:#fff;border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text2);cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;
+  display:flex;align-items:center;gap:7px;white-space:nowrap;min-width:145px;
+  justify-content:space-between;transition:all .15s
+}
+.ms-btn:hover,.ms-wrap.open .ms-btn{border-color:var(--border2);box-shadow:var(--sh)}
+.ms-btn.has-sel{border-color:var(--blue);color:var(--blue);background:var(--blue-bg)}
+.ms-arrow{font-size:8px;color:var(--muted);transition:transform .15s}
+.ms-wrap.open .ms-arrow{transform:rotate(180deg)}
+.ms-drop{
+  position:absolute;top:calc(100% + 5px);left:0;min-width:215px;background:#fff;
+  border:1px solid var(--border2);border-radius:var(--r);z-index:300;
+  box-shadow:var(--sh-lg);display:none;max-height:290px;overflow-y:auto
+}
+.ms-drop.open{display:block;animation:dropIn .12s ease}
+@keyframes dropIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.ms-opt{padding:8px 12px;cursor:pointer;font-size:12px;display:flex;justify-content:space-between;align-items:center;transition:background .1s;color:var(--text2)}
+.ms-opt:hover{background:var(--bg3)}
+.ms-opt.sel{color:var(--blue);background:var(--blue-bg);font-weight:500}
+.ms-opt.no-data{color:var(--border2);cursor:not-allowed}
+.ms-opt-all{border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.3px;text-transform:uppercase}
+.tax-wrap{display:flex;align-items:center;gap:8px;margin-left:auto}
+.tax-label{font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap}
+.tax-val{font-size:13px;font-weight:700;color:var(--amber);min-width:40px;text-align:right}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border2);outline:none;cursor:pointer;width:95px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--amber);border:2px solid #fff;cursor:pointer;box-shadow:0 2px 5px rgba(217,119,6,.3)}
+.btn-clear{padding:5px 11px;background:transparent;border:1px solid rgba(220,38,38,.3);border-radius:var(--r);color:var(--red);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;font-weight:500}
+.btn-clear:hover{background:var(--red-bg);border-color:var(--red)}
+
+/* ── CONTENT ─────────────────────────────────────────── */
+.content{padding:22px 28px}
+
+/* ── KPIs ────────────────────────────────────────────── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:22px}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:16px 16px 14px;box-shadow:var(--sh);transition:box-shadow .15s,transform .1s;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--rl) 0 0 var(--rl)}
+.kpi:nth-child(1)::after{background:var(--muted)}.kpi:nth-child(2)::after{background:var(--blue)}
+.kpi:nth-child(3)::after{background:var(--purple)}.kpi:nth-child(4)::after{background:var(--green)}
+.kpi:nth-child(5)::after{background:var(--amber)}.kpi:nth-child(6)::after{background:var(--teal)}
+.kpi:hover{box-shadow:var(--sh-md);transform:translateY(-1px)}
+.kpi-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;padding-left:8px}
+.kpi-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px;padding-left:8px}
+
+/* ── CHART CARDS ─────────────────────────────────────── */
+.chart-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:20px;box-shadow:var(--sh);transition:box-shadow .15s}
+.chart-card:hover{box-shadow:var(--sh-md)}
+.chart-title{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.chart-sub{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:14px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.legend{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:13px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);font-weight:500}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.ticket-badges{display:flex;justify-content:space-around;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.ticket-badge{text-align:center}
+.t-dot{width:8px;height:8px;border-radius:50%;margin:0 auto 4px}
+.t-app{font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:500}
+.t-val{font-size:18px;font-weight:700}
+
+/* ── IMPORT TAB ──────────────────────────────────────── */
+.import-page{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:start}
+.import-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:20px;box-shadow:var(--sh)}
+.import-card-title{font-size:14px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.imp-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.imp-99{background:rgba(217,119,6,.1);color:#B45309;border:1px solid rgba(217,119,6,.2)}
+.imp-lala{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
+.imp-uber{background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2)}
+.import-hint{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+
+/* Month selector in import */
+.month-sel-wrap{margin-bottom:12px}
+.month-sel-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:block}
+.month-sel{
+  width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:var(--r);
+  background:#fff;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;
+  cursor:pointer;transition:border-color .15s;outline:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237E96AD'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 11px center
+}
+.month-sel:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.month-sel.selected{border-color:var(--blue);color:var(--blue);background-color:var(--blue-bg)}
+
+/* Drop zone */
+.drop-zone{
+  border:2px dashed var(--border2);border-radius:var(--r);padding:22px 12px;
+  text-align:center;cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;gap:6px
+}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--blue);background:var(--blue-bg)}
+.drop-zone.done{border-color:var(--green);border-style:solid;background:var(--green-bg)}
+.drop-zone.err{border-color:var(--red);border-style:solid;background:var(--red-bg)}
+.dz-icon{font-size:26px}
+.dz-text{font-size:12px;font-weight:600;color:var(--text2);word-break:break-all;text-align:center}
+.dz-hint{font-size:10px;color:var(--muted)}
+.dz-status{font-size:11px;margin-top:7px;min-height:16px;text-align:center;line-height:1.5;font-weight:500}
+.dz-status.ok{color:var(--green)}.dz-status.err{color:var(--red)}.dz-status.warn{color:var(--amber)}
+
+/* Import summary */
+.import-summary{grid-column:1/-1;background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:20px;box-shadow:var(--sh)}
+.imp-sum-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.imp-sum-table{width:100%;border-collapse:collapse;font-size:12px}
+.imp-sum-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.4px}
+.imp-sum-table td{padding:8px 12px;border-bottom:1px solid var(--bg3);color:var(--text2)}
+.imp-sum-table tr:last-child td{border-bottom:none}
+.btn-del{padding:3px 9px;border-radius:6px;border:1px solid rgba(220,38,38,.25);background:transparent;color:var(--red);cursor:pointer;font-size:11px;font-family:inherit;transition:all .12s}
+.btn-del:hover{background:var(--red-bg);border-color:var(--red)}
+
+/* ── DB TABLE ────────────────────────────────────────── */
+.db-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:9px}
+.db-info{font-size:12px;color:var(--muted);margin-top:3px}
+.pager{display:flex;gap:3px}
+.pg-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:12px;font-family:inherit;color:var(--text2);transition:all .12s}
+.pg-btn:hover{border-color:var(--border2);background:var(--bg3)}
+.pg-btn.active{border-color:var(--blue);background:var(--blue-bg);color:var(--blue);font-weight:700}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--rl);box-shadow:var(--sh)}
+table{width:100%;border-collapse:collapse;min-width:880px}
+thead th{padding:10px 13px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg3);letter-spacing:.4px;white-space:nowrap;text-transform:uppercase}
+tbody td{padding:9px 13px;border-bottom:1px solid var(--bg3);font-size:12px;transition:background .1s;color:var(--text2)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg3)}
+.mono{font-family:'DM Mono',monospace;font-size:11px}
+.pill{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.pill-99{background:rgba(217,119,6,.1);color:#B45309;border:1px solid rgba(217,119,6,.2)}
+.pill-lala{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
+.pill-uber{background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2)}
+.empty-td{text-align:center;padding:44px;color:var(--muted);font-size:13px}
+
+/* ── DB FILTERS ──────────────────────────────────────────── */
+.db-filter-bar{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r);padding:10px 14px;margin-bottom:14px
+}
+.db-filter-label{font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.db-filter-col{
+  padding:6px 10px;border:1px solid var(--border);border-radius:8px;
+  background:#fff;font-family:inherit;font-size:12px;color:var(--text2);
+  cursor:pointer;outline:none;transition:border-color .15s
+}
+.db-filter-col:focus{border-color:var(--blue)}
+.db-filter-input{
+  padding:6px 10px;border:1px solid var(--border);border-radius:8px;
+  background:#fff;font-family:inherit;font-size:12px;color:var(--text);
+  outline:none;min-width:180px;transition:border-color .15s,box-shadow .15s
+}
+.db-filter-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.db-filter-input::placeholder{color:var(--muted)}
+.db-filter-hint{font-size:11px;color:var(--muted);font-style:italic}
+.btn-db-clear{
+  padding:5px 11px;background:transparent;border:1px solid rgba(220,38,38,.3);
+  border-radius:8px;color:var(--red);cursor:pointer;font-size:12px;
+  font-family:inherit;transition:all .15s;font-weight:500;white-space:nowrap
+}
+.btn-db-clear:hover{background:var(--red-bg);border-color:var(--red)}
+.db-match-count{font-size:11px;color:var(--blue);font-weight:600;white-space:nowrap}
+
+
+/* ── COLUMN MAPPER MODAL ─────────────────────────────────── */
+.mapper-overlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.mapper-overlay.open{display:flex;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.mapper-modal{background:#fff;border:1px solid var(--border2);border-radius:var(--rl);padding:26px;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-lg);animation:slideUp .18s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.mapper-title{font-size:16px;font-weight:700;margin-bottom:2px;letter-spacing:-.2px}
+.mapper-sub{font-size:12px;color:var(--muted);margin-bottom:18px}
+.mapper-info{background:var(--bg3);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--text2);margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap}
+.mapper-info span{display:flex;align-items:center;gap:5px}
+.mapper-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.mapper-field{display:flex;flex-direction:column;gap:4px}
+.mapper-field label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.mapper-field label span{color:var(--red);margin-left:2px}
+.mapper-field label em{color:var(--muted);font-style:normal;font-weight:400;text-transform:none;letter-spacing:0}
+.mapper-sel{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;font-family:inherit;font-size:12px;color:var(--text);cursor:pointer;outline:none;transition:border-color .15s}
+.mapper-sel:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.mapper-sel.matched{border-color:var(--green);background:var(--green-bg)}
+.mapper-preview{background:var(--bg3);border-radius:8px;padding:10px 13px;margin-bottom:16px;font-size:11px}
+.mapper-preview-title{font-weight:700;color:var(--text2);margin-bottom:6px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.mapper-preview table{width:100%;border-collapse:collapse}
+.mapper-preview th{font-size:10px;color:var(--muted);padding:3px 6px;text-align:left;font-weight:600}
+.mapper-preview td{font-size:11px;color:var(--text2);padding:3px 6px;border-top:1px solid var(--border)}
+.mapper-warn{background:var(--amber-bg);border:1px solid rgba(217,119,6,.25);border-radius:8px;padding:9px 12px;font-size:11px;color:#92400E;margin-bottom:14px;line-height:1.6}
+.mapper-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.btn-mapper-cancel{padding:8px 16px;background:transparent;border:1px solid var(--border2);border-radius:var(--r);color:var(--muted);cursor:pointer;font-family:inherit;font-size:13px;transition:all .12s}
+.btn-mapper-cancel:hover{color:var(--text);border-color:var(--text)}
+.btn-mapper-ok{padding:8px 20px;border-radius:var(--r);background:var(--blue);border:none;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;transition:opacity .15s}
+.btn-mapper-ok:hover{opacity:.88}
+.mapper-save-map{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer}
+.mapper-save-map input{cursor:pointer;accent-color:var(--blue)}
+
+/* ── SAVE INDICATOR ──────────────────────────────────────── */
+.save-indicator{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+
+/* ── EXPORT BUTTON ───────────────────────────────────────── */
+.btn-export{padding:7px 14px;border-radius:var(--r);border:1px solid rgba(13,148,136,.35);background:transparent;color:var(--teal);cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s}
+.btn-export:hover{background:rgba(13,148,136,.07);border-color:var(--teal)}
+
+
+/* ── GOOGLE SHEETS CARD ──────────────────────────────────── */
+.sheets-card{grid-column:1/-1;background:linear-gradient(135deg,#fff 0%,#F0FDF4 100%);border:1px solid rgba(22,163,74,.25)!important}
+.sheets-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.sheets-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.sheets-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px}
+.sheets-badge.connected{background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2)}
+.sheets-badge.disconnected{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+.sheets-badge.syncing{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
+.sheets-pulse{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sheets-body{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
+.sheets-url-wrap{display:flex;flex-direction:column;gap:6px}
+.sheets-url-label{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.4px;text-transform:uppercase}
+.sheets-url-row{display:flex;gap:8px}
+.sheets-url-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r);font-family:inherit;font-size:12px;color:var(--text);outline:none;transition:all .15s}
+.sheets-url-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.sheets-url-input.ok{border-color:var(--green);background:var(--green-bg)}
+.sheets-url-input.err{border-color:var(--red);background:var(--red-bg)}
+.btn-sheets-connect{padding:8px 16px;border-radius:var(--r);background:var(--blue);border:none;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;white-space:nowrap;transition:opacity .15s}
+.btn-sheets-connect:hover{opacity:.88}
+.sheets-hint{font-size:11px;color:var(--muted);line-height:1.6}
+.sheets-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.btn-sheets-sync{padding:8px 14px;border-radius:var(--r);background:var(--green);border:none;color:#fff;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap}
+.btn-sheets-sync:hover{opacity:.88}
+.btn-sheets-sync:disabled{opacity:.5;cursor:not-allowed}
+.btn-sheets-tpl{padding:7px 13px;border-radius:var(--r);background:transparent;border:1px solid var(--border2);color:var(--text2);cursor:pointer;font-family:inherit;font-size:12px;display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap}
+.btn-sheets-tpl:hover{background:var(--bg3)}
+.btn-sheets-disc{padding:6px 12px;border-radius:var(--r);background:transparent;border:1px solid rgba(220,38,38,.3);color:var(--red);cursor:pointer;font-family:inherit;font-size:11px;transition:all .15s}
+.btn-sheets-disc:hover{background:var(--red-bg);border-color:var(--red)}
+.sheets-sync-info{font-size:11px;color:var(--muted);text-align:right}
+.sheets-steps{background:var(--bg3);border-radius:var(--r);padding:12px 14px;font-size:12px;line-height:1.8;color:var(--text2)}
+.sheets-steps strong{color:var(--text)}
+.sheets-steps code{background:var(--bg4);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:11px}
+
+
+/* ── SUPABASE CARD ───────────────────────────────────── */
+.supa-card{grid-column:1/-1;background:linear-gradient(135deg,#fff 0%,#F0FDF4 100%);border:1px solid rgba(22,163,74,.25)!important}
+.supa-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.supa-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.supa-status{padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px}
+.supa-status.connected{background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2)}
+.supa-status.disconnected{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+.supa-status.loading{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
+.supa-pulse{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite}
+.supa-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn-supa-load{padding:8px 16px;border-radius:var(--r);background:var(--green);border:none;color:#fff;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px;transition:opacity .15s}
+.btn-supa-load:hover{opacity:.88}
+.btn-supa-load:disabled{opacity:.5;cursor:not-allowed}
+.btn-supa-clear{padding:7px 13px;border-radius:var(--r);background:transparent;border:1px solid rgba(220,38,38,.3);color:var(--red);cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;transition:all .15s}
+.btn-supa-clear:hover{background:var(--red-bg);border-color:var(--red)}
+.supa-info{font-size:12px;color:var(--muted);margin-top:6px}
+.supa-progress{height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden;display:none}
+.supa-progress-bar{height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .3s}
+
+@media(max-width:900px){
+  header,.tabs-bar,.filters,.content{padding-left:14px;padding-right:14px}
+  .charts-row,.import-page{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── HEADER ───────────────────────────────────────────── -->
+<header>
+  <div class="brand">
+    <div class="brand-icon">M</div>
+    <div>
+      <div class="brand-name">Família Moto Express</div>
+      <div class="brand-sub">Painel de Análise Logística</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="save-indicator" id="save-indicator" style="display:none">
+      <div class="save-dot"></div>
+      <span id="save-txt">Salvo localmente</span>
+    </div>
+    <span class="ped-badge" id="ped-badge">— pedidos</span>
+  </div>
+</header>
+
+<!-- ── TABS ─────────────────────────────────────────────── -->
+<div class="tabs-bar">
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('dash')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </button>
+    <button class="tab" onclick="setTab('import')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Importar Dados
+    </button>
+    <button class="tab" onclick="setTab('db')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      Banco de Dados
+    </button>
+  </div>
+  <div class="tabs-right" id="tabs-right">Dados de exemplo · Vá em "Importar Dados" para carregar suas planilhas</div>
+</div>
+
+<!-- ── FILTERS (dashboard only) ─────────────────────────── -->
+<div class="filters" id="filter-bar">
+  <span class="fl">Filtros</span>
+  <div class="ms-wrap" id="ms-app"><button class="ms-btn" onclick="toggleMs('app')"><span id="lbl-app">Operação / App</span><span class="ms-arrow">▾</span></button><div class="ms-drop" id="drop-app"><div class="ms-opt ms-opt-all" onclick="selAll('app')">Todos os Apps</div></div></div>
+  <div class="ms-wrap" id="ms-mes"><button class="ms-btn" onclick="toggleMs('mes')"><span id="lbl-mes">Mês</span><span class="ms-arrow">▾</span></button><div class="ms-drop" id="drop-mes"><div class="ms-opt ms-opt-all" onclick="selAll('mes')">Todos os Meses</div></div></div>
+  <div class="ms-wrap" id="ms-cli"><button class="ms-btn" onclick="toggleMs('cli')"><span id="lbl-cli">Cliente</span><span class="ms-arrow">▾</span></button><div class="ms-drop" id="drop-cli"><div class="ms-opt ms-opt-all" onclick="selAll('cli')">Todos os Clientes</div></div></div>
+  <div class="tax-wrap">
+    <span class="tax-label">Imposto</span>
+    <input type="range" min="0" max="30" step="0.5" value="12" id="tax-range" oninput="onTax(this.value)">
+    <span class="tax-val" id="tax-lbl">12%</span>
+  </div>
+  <button class="btn-clear" onclick="clearAll()">✕ Limpar</button>
+</div>
+
+<!-- ── DASHBOARD ─────────────────────────────────────────── -->
+<div id="pane-dash" class="content">
+  <div class="kpi-row" id="kpi-row"></div>
+  <div class="chart-card">
+    <div class="chart-title">Análise de Dados</div>
+    <div class="chart-sub">Comparativo por cliente — valores em R$</div>
+    <div class="legend" id="bar-legend"></div>
+    <div style="position:relative;width:100%;height:340px"><canvas id="barChart"></canvas></div>
+  </div>
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title" id="d1-title">Distribuição Financeira</div>
+      <div class="chart-sub">Valor App · Imposto · Lucro Líquido em %</div>
+      <div class="legend" id="d1-legend"></div>
+      <div style="position:relative;width:100%;height:220px"><canvas id="donut1"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Ticket Médio por App</div>
+      <div class="chart-sub">Valor médio por corrida / entrega</div>
+      <div class="legend" id="d2-legend"></div>
+      <div style="position:relative;width:100%;height:175px"><canvas id="donut2"></canvas></div>
+      <div class="ticket-badges" id="ticket-badges"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── IMPORTAR ──────────────────────────────────────────── -->
+<div id="pane-import" class="content" style="display:none">
+  <div class="import-page">
+
+    <!-- 99 Entregas -->
+    <div class="import-card">
+      <div class="import-card-title"><span class="imp-badge imp-99">99 Entregas</span></div>
+      <p class="import-hint">Arquivo: <em>RELATORIO_99_...</em><br>Aba: qualquer (usa a primeira)<br>Colunas detectadas: <code>Valor Frete</code>, <code>Valor total</code>, <code>Cliente</code></p>
+      <div class="month-sel-wrap">
+        <label class="month-sel-label">📅 Mês de referência *</label>
+        <select class="month-sel" id="mes-99" onchange="this.classList.toggle('selected',this.value!='')">
+          <option value="">— Selecione o mês —</option>
+        </select>
+      </div>
+      <div class="drop-zone" id="zone-99" onclick="document.getElementById('inp-99').click()" ondragover="ev(event,'99')" ondragleave="lv('99')" ondrop="dp(event,'99')">
+        <div class="dz-icon">📄</div>
+        <div class="dz-text" id="ztxt-99">Clique ou arraste o arquivo</div>
+        <div class="dz-hint">.xlsx · .xls · .csv</div>
+      </div>
+      <div class="dz-status" id="zst-99"></div>
+      <input type="file" id="inp-99" accept=".xlsx,.xls,.csv" style="display:none" onchange="load(event,'99')">
+    </div>
+
+    <!-- Lalamove -->
+    <div class="import-card">
+      <div class="import-card-title"><span class="imp-badge imp-lala">Lalamove</span></div>
+      <p class="import-hint">Arquivo: <em>Relatorio_Lalamove_...</em><br>Aba: <code>Sheet1</code><br>Colunas: <code>FINAL CHARGE</code>, <code>VALOR CLIENTE</code>, <code>CLIENTE</code></p>
+      <div class="month-sel-wrap">
+        <label class="month-sel-label">📅 Mês de referência *</label>
+        <select class="month-sel" id="mes-lala" onchange="this.classList.toggle('selected',this.value!='')">
+          <option value="">— Selecione o mês —</option>
+        </select>
+      </div>
+      <div class="drop-zone" id="zone-lala" onclick="document.getElementById('inp-lala').click()" ondragover="ev(event,'lala')" ondragleave="lv('lala')" ondrop="dp(event,'lala')">
+        <div class="dz-icon">📄</div>
+        <div class="dz-text" id="ztxt-lala">Clique ou arraste o arquivo</div>
+        <div class="dz-hint">.xlsx · .xls · .csv</div>
+      </div>
+      <div class="dz-status" id="zst-lala"></div>
+      <input type="file" id="inp-lala" accept=".xlsx,.xls,.csv" style="display:none" onchange="load(event,'lala')">
+    </div>
+
+    <!-- Uber -->
+    <div class="import-card">
+      <div class="import-card-title"><span class="imp-badge imp-uber">Uber Entregas</span></div>
+      <p class="import-hint">Arquivo: <em>RELATORIO_UBER_...</em><br>Header na linha 6<br>⚠️ Mapeie a coluna "Valor total / real" para Valor Cliente no mapeador</p>
+      <div class="month-sel-wrap">
+        <label class="month-sel-label">📅 Mês de referência *</label>
+        <select class="month-sel" id="mes-uber" onchange="this.classList.toggle('selected',this.value!='')">
+          <option value="">— Selecione o mês —</option>
+        </select>
+      </div>
+      <div class="drop-zone" id="zone-uber" onclick="document.getElementById('inp-uber').click()" ondragover="ev(event,'uber')" ondragleave="lv('uber')" ondrop="dp(event,'uber')">
+        <div class="dz-icon">📄</div>
+        <div class="dz-text" id="ztxt-uber">Clique ou arraste o arquivo</div>
+        <div class="dz-hint">.xlsx · .xls · .csv</div>
+      </div>
+      <div class="dz-status" id="zst-uber"></div>
+      <input type="file" id="inp-uber" accept=".xlsx,.xls,.csv" style="display:none" onchange="load(event,'uber')">
+    </div>
+
+    <!-- Supabase Connection -->
+    <div class="import-card supa-card">
+      <div class="supa-header">
+        <div class="supa-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" fill="#16A34A"/><path d="M8 17l5-10 5 10M6 13h12" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Banco de Dados — Supabase
+        </div>
+        <div class="supa-status disconnected" id="supa-status">
+          <span>Verificando…</span>
+        </div>
+      </div>
+      <div class="supa-actions">
+        <button class="btn-supa-load" id="btn-supa-load" onclick="supaLoad()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          Carregar dados
+        </button>
+        <button class="btn-export" id="btn-supa-save" onclick="supaSave()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Salvar no Supabase
+        </button>
+        <button class="btn-supa-clear" onclick="supaClear()">🗑 Apagar tudo</button>
+      </div>
+      <div class="supa-info" id="supa-info">Os dados ficam salvos online — qualquer pessoa que abrir o dashboard verá os mesmos dados.</div>
+      <div class="supa-progress" id="supa-progress"><div class="supa-progress-bar" id="supa-bar"></div></div>
+    </div>
+
+    <!-- Google Sheets Connection -->
+    <div class="import-card sheets-card">
+      <div class="sheets-header">
+        <div class="sheets-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" fill="#16A34A"/><path d="M7 8h10M7 12h10M7 16h6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Conexão com Google Sheets
+        </div>
+        <div class="sheets-badge disconnected" id="sheets-badge">
+          <span>Não conectado</span>
+        </div>
+      </div>
+
+      <div id="sheets-setup-block">
+        <div class="sheets-steps" style="margin-bottom:14px">
+          <strong>Como configurar (uma única vez):</strong><br>
+          1. Crie uma planilha no Google Sheets com as colunas padrão → <button class="btn-sheets-tpl" onclick="downloadTemplate()" style="display:inline-flex;padding:3px 8px;font-size:11px">⬇ Baixar template</button><br>
+          2. Cole os dados de todos os apps nessa planilha (ou use o Export do dashboard)<br>
+          3. Vá em <strong>Arquivo → Compartilhar → Publicar na web</strong><br>
+          4. Escolha <code>Valores separados por vírgula (.csv)</code> → clique em <strong>Publicar</strong><br>
+          5. Copie o link gerado e cole abaixo
+        </div>
+        <div class="sheets-url-wrap">
+          <span class="sheets-url-label">Link do Google Sheets (publicado como CSV)</span>
+          <div class="sheets-url-row">
+            <input type="url" class="sheets-url-input" id="sheets-url-input"
+              placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv">
+            <button class="btn-sheets-connect" onclick="connectSheets()">Conectar</button>
+          </div>
+          <span class="sheets-hint">
+            O link deve ser da planilha <strong>publicada como CSV</strong>. Os dados são carregados automaticamente ao abrir o dashboard.<br>
+            <span style="color:var(--amber)">⚠️ A planilha precisa seguir o formato padrão (12 colunas A–L).</span>
+          </span>
+        </div>
+      </div>
+
+      <div id="sheets-connected-block" style="display:none">
+        <div class="sheets-body">
+          <div>
+            <div class="sheets-url-wrap" style="margin-bottom:10px">
+              <span class="sheets-url-label">Planilha conectada</span>
+              <div class="sheets-url-row">
+                <input type="url" class="sheets-url-input ok" id="sheets-url-display" readonly>
+                <button class="btn-sheets-disc" onclick="disconnectSheets()">Desconectar</button>
+              </div>
+            </div>
+            <div class="sheets-sync-info" style="text-align:left">
+              <span id="sheets-last-sync">Nunca sincronizado</span> ·
+              Auto-sync:
+              <select id="sheets-interval" onchange="setSyncInterval(this.value)" style="font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:5px;background:#fff">
+                <option value="0">Desativado</option>
+                <option value="5">A cada 5 min</option>
+                <option value="15" selected>A cada 15 min</option>
+                <option value="30">A cada 30 min</option>
+              </select>
+            </div>
+          </div>
+          <div class="sheets-actions">
+            <button class="btn-sheets-sync" id="btn-sync" onclick="syncSheets()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+              Sincronizar agora
+            </button>
+            <button class="btn-sheets-tpl" onclick="downloadTemplate()">
+              ⬇ Baixar template
+            </button>
+          </div>
+        </div>
+        <div id="sheets-sync-status" style="margin-top:8px;font-size:12px"></div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="import-summary">
+      <div class="imp-sum-title">
+        <span>📦 Dados Carregados</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-export" id="btn-export" style="display:none" onclick="exportData()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar dados
+          </button>
+          <button class="btn-clear" onclick="confirmarLimpar()">🗑 Limpar tudo</button>
+        </div>
+      </div>
+      <div id="imp-sum-content">
+        <p style="color:var(--muted);font-size:13px">Nenhum dado real importado. Os gráficos estão exibindo dados de exemplo.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── BANCO DE DADOS ─────────────────────────────────────── -->
+<div id="pane-db" class="content" style="display:none">
+
+  <!-- Filtros independentes do Banco de Dados -->
+  <div class="db-filter-bar">
+    <span class="db-filter-label">🔍 Buscar</span>
+    <select class="db-filter-col" id="dbf-col" onchange="onDbFilterCol()">
+      <option value="">— Coluna —</option>
+      <option value="mes">Mês</option>
+      <option value="app">Operação / App</option>
+      <option value="cliente">Cliente</option>
+    </select>
+    <div id="dbf-value-wrap" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">
+      <!-- preenchido dinamicamente: input texto ou select -->
+    </div>
+    <button class="btn-db-clear" onclick="clearDbFilter()" id="btn-db-clear" style="display:none">✕ Limpar</button>
+    <span class="db-match-count" id="db-match-count"></span>
+    <span class="db-filter-hint" id="dbf-hint">Selecione uma coluna para filtrar</span>
+  </div>
+
+  <div class="db-header">
+    <div>
+      <div style="font-size:15px;font-weight:700">Banco de Dados</div>
+      <div class="db-info" id="db-info">—</div>
+    </div>
+    <div class="pager" id="pager"></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Mês</th><th>Order ID</th><th>Operação</th><th>Valor Cliente</th><th>Valor App</th><th>Lucro Bruto</th><th>Imposto</th><th>Lucro Líquido</th><th>Cliente</th><th>Qtd</th><th>Ticket</th><th>Data</th></tr></thead>
+      <tbody id="db-body"></tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ── COLUMN MAPPER MODAL ──────────────────────────────── -->
+<div class="mapper-overlay" id="mapper-overlay">
+<div class="mapper-modal">
+  <div class="mapper-title" id="mapper-title">Mapeamento de colunas</div>
+  <div class="mapper-sub" id="mapper-sub"></div>
+  <div class="mapper-info" id="mapper-info"></div>
+  <div class="mapper-warn" id="mapper-warn" style="display:none"></div>
+  <div class="mapper-grid" id="mapper-grid"></div>
+  <div class="mapper-preview" id="mapper-preview" style="display:none"></div>
+  <div class="mapper-actions">
+    <label class="mapper-save-map">
+      <input type="checkbox" id="mapper-remember" checked>
+      Lembrar mapeamento para este app
+    </label>
+    <div style="display:flex;gap:8px">
+      <button class="btn-mapper-cancel" onclick="closeMapper()">Cancelar</button>
+      <button class="btn-mapper-ok" onclick="confirmMapper()">✓ Importar</button>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- /shell -->
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────────────────────────
+const MONTHS=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const APP_COLORS={"99 Entregas":"#D97706","Lalamove":"#2563EB","Uber Entregas":"#16A34A"};
+const BAR_COLORS=["#2563EB","#7C3AED","#16A34A","#D97706","#0D9488"];
+const BAR_KEYS=["vc","va","lb","imp","ll"];
+const BAR_NAMES=["Valor Cliente","Valor App","Lucro Bruto","Imposto","Lucro Líquido"];
+const D1_COLORS=["#7C3AED","#EA580C","#0D9488"];
+const D1_NAMES=["Valor App","Imposto","Lucro Líquido"];
+const DB_PS=50;
+
+// ── HELPERS ────────────────────────────────────────────────────────────────────
+const p2=n=>String(n).padStart(2,"0");
+const fmt=v=>"R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+function pf(v){
+  if(v===null||v===undefined||v instanceof Date)return 0;
+  let s=String(v).trim();
+  if(!s||s==="-"||s==="--"||s==="N/A")return 0;
+  // Remover símbolo de moeda e espaços
+  s=s.replace(/[R$\s]/g,"");
+  // Detectar separador decimal: se tem vírgula E ponto, vírgula é decimal BR
+  // Ex: "1.526,20" → "1526.20" | "15,2" → "15.2" | "15.2" → "15.2"
+  if(s.includes(",")&&s.includes(".")){
+    s=s.replace(/\./g,"").replace(",",".");  // BR: ponto=milhar, vírgula=decimal
+  } else if(s.includes(",")&&!s.includes(".")){
+    s=s.replace(",",".");  // vírgula como decimal
+  }
+  const n=parseFloat(s);
+  return isNaN(n)?0:n;
+}
+
+function cleanCli(v){
+  const s=String(v||"").trim();
+  return /[a-zA-Z\u00C0-\u024F]/.test(s)&&s.length>=2?s:"";
+}
+
+function fmtDate(v){
+  if(!v||v===""||v==="null")return"";
+  if(v instanceof Date)return isNaN(v)?"":p2(v.getDate())+"/"+p2(v.getMonth()+1)+"/"+v.getFullYear();
+  if(typeof v==="number"&&v>1){
+    try{const d=XLSX.SSF.parse_date_code(v);if(d)return p2(d.d)+"/"+p2(d.m)+"/"+d.y;}catch(e){}
+  }
+  const s=String(v).trim();
+  if(/^\d{1,2}\/\d{1,2}\/\d{4}/.test(s))return s.substring(0,10);
+  const iso=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso)return iso[3]+"/"+iso[2]+"/"+iso[1];
+  const d=new Date(s);
+  return isNaN(d)?s.substring(0,10):p2(d.getDate())+"/"+p2(d.getMonth()+1)+"/"+d.getFullYear();
+}
+
+// ── POPULATE MONTH SELECTORS ──────────────────────────────────────────────────
+function populateMonthSelectors(){
+  ["mes-99","mes-lala","mes-uber"].forEach(id=>{
+    const sel=document.getElementById(id);
+    const cur=sel.value;
+    sel.innerHTML='<option value="">— Selecione o mês —</option>';
+    MONTHS.forEach(m=>{
+      const opt=document.createElement("option");
+      opt.value=m;opt.textContent=m;
+      if(m===cur)opt.selected=true;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+// ── SAMPLE DATA ────────────────────────────────────────────────────────────────
+const SC=["Cobra Campinas","Cobra Campo Grande","Cobra BH","Cobra Recife","Cobra Osasco","Cobra Santo Amaro","Cobra Palmas","Cobra SBC","Cobra GRU","Cobra Porto Alegre","Cobra Sorocaba","Cobra Montes Claros","Furacão Santo André","Furacão Socorro","Furacão Sorocaba","Furacão Cambuci","Furacão Osasco","Furacão PQ Novo Mundo","MetalSystem","Sky Guarulhos"];
+const SA=["99 Entregas","Lalamove","Uber Entregas"];
+let _sid=1000;
+function gerarSample(){
+  const r=[];
+  ["Janeiro","Fevereiro"].forEach(mes=>{
+    SC.forEach(cli=>{
+      [SA[Math.floor(Math.random()*SA.length)],SA[0]].slice(0,1+Math.floor(Math.random()*2)).forEach(app=>{
+        for(let i=0;i<4+Math.floor(Math.random()*8);i++){
+          const vc=+(20+Math.random()*130).toFixed(2);
+          const va=+(vc*(0.55+Math.random()*.2)).toFixed(2);
+          r.push({id:`S-${_sid++}`,mes,app,vc,va,lb:+(vc-va).toFixed(2),imp:0,ll:0,cliente:cli,qtd:1,ticket:vc||va,data:"01/01/2026"});
+        }
+      });
+    });
+  });
+  return r;
+}
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let RAW=gerarSample(),selApps=[],selMeses=[],selClis=[],taxRate=12,dbPage=1,openDropId=null,realImported=false;
+let barChart=null,donut1=null,donut2=null;
+// Track imports for summary
+let importLog=[]; // {app, mes, filename, count}
+
+// ── FILTER UTILS ───────────────────────────────────────────────────────────────
+function uv(key){
+  const vals=[...new Set(RAW.map(r=>r[key]))].filter(Boolean);
+  if(key==="mes")return vals.sort((a,b)=>MONTHS.indexOf(a)-MONTHS.indexOf(b));
+  return vals.sort();
+}
+
+function buildDropdowns(){
+  buildDrop("app",uv("app"),selApps);
+  buildDropMonths();
+  buildDrop("cli",uv("cliente"),selClis);
+}
+
+function buildDrop(type,opts,sel){
+  const drop=document.getElementById("drop-"+type);
+  [...drop.querySelectorAll(".ms-opt:not(.ms-opt-all)")].forEach(e=>e.remove());
+  opts.forEach(opt=>{
+    const d=document.createElement("div");
+    d.className="ms-opt"+(sel.includes(opt)?" sel":"");
+    d.innerHTML=`<span>${opt}</span>${sel.includes(opt)?'<span style="font-size:10px;color:var(--blue)">✓</span>':""}`;
+    d.onclick=()=>toggleOpt(type,opt);
+    drop.appendChild(d);
+  });
+  updateLbl(type,sel);
+}
+
+function buildDropMonths(){
+  const drop=document.getElementById("drop-mes");
+  [...drop.querySelectorAll(".ms-opt:not(.ms-opt-all)")].forEach(e=>e.remove());
+  const dataMonths=new Set(RAW.map(r=>r.mes).filter(Boolean));
+  MONTHS.forEach(mes=>{
+    const has=dataMonths.has(mes);
+    const d=document.createElement("div");
+    d.className="ms-opt"+(selMeses.includes(mes)?" sel":"")+(has?"":" no-data");
+    d.innerHTML=`<span style="${has?"":"color:var(--border2)"}">${mes}</span>`+(selMeses.includes(mes)?'<span style="font-size:10px;color:var(--blue)">✓</span>':(has?'<span style="font-size:9px;color:var(--muted)">●</span>':''));
+    if(has) d.onclick=()=>toggleOpt("mes",mes);
+    drop.appendChild(d);
+  });
+  updateLbl("mes",selMeses);
+}
+
+function toggleMs(type){
+  if(openDropId&&openDropId!==type){document.getElementById("drop-"+openDropId).classList.remove("open");document.getElementById("ms-"+openDropId).classList.remove("open")}
+  const isOpen=document.getElementById("drop-"+type).classList.contains("open");
+  document.getElementById("drop-"+type).classList.toggle("open");
+  document.getElementById("ms-"+type).classList.toggle("open",!isOpen);
+  openDropId=isOpen?null:type;
+}
+
+document.addEventListener("click",e=>{if(!e.target.closest(".ms-wrap")&&openDropId){document.getElementById("drop-"+openDropId).classList.remove("open");document.getElementById("ms-"+openDropId).classList.remove("open");openDropId=null}});
+
+function selAll(t){if(t==="app")selApps=[];else if(t==="mes")selMeses=[];else selClis=[];buildDropdowns();dbPage=1;render()}
+function toggleOpt(t,v){const a=t==="app"?selApps:t==="mes"?selMeses:selClis;const i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);buildDropdowns();dbPage=1;render()}
+function updateLbl(t,s){const m={app:"Operação / App",mes:"Mês",cli:"Cliente"};document.getElementById("lbl-"+t).textContent=!s.length?m[t]:s.length===1?s[0]:s.length+" selecionados";document.getElementById("ms-"+t).querySelector(".ms-btn").classList.toggle("has-sel",s.length>0)}
+function onTax(v){taxRate=+v;document.getElementById("tax-lbl").textContent=taxRate+"%";render()}
+function clearAll(){selApps=[];selMeses=[];selClis=[];taxRate=12;document.getElementById("tax-range").value=12;document.getElementById("tax-lbl").textContent="12%";buildDropdowns();dbPage=1;render()}
+
+// ── FILTERED ───────────────────────────────────────────────────────────────────
+function filtered(){
+  return RAW
+    .filter(r=>(!selApps.length||selApps.includes(r.app))&&(!selMeses.length||selMeses.includes(r.mes))&&(!selClis.length||selClis.includes(r.cliente)))
+    .map(r=>{const imp=+(r.lb*taxRate/100).toFixed(2);return{...r,imp,ll:+(r.lb-imp).toFixed(2)}});
+}
+
+// ── TABS ───────────────────────────────────────────────────────────────────────
+function setTab(t){
+  ["dash","import","db"].forEach(id=>{
+    document.getElementById("pane-"+id).style.display=id===t?"block":"none";
+  });
+  document.querySelectorAll(".tab").forEach((b,i)=>b.classList.toggle("active",["dash","import","db"][i]===t));
+  document.getElementById("filter-bar").style.display=t==="dash"?"flex":"none";
+  if(t==="db")renderDB(dbFilteredRows());
+  if(t==="import")renderImportSummary();
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+function render(){
+  const rows=filtered();
+  renderKPIs(rows);renderBar(rows);renderDonut1(rows);renderDonut2(rows);
+  if(document.getElementById("pane-db").style.display!=="none")renderDB(rows);
+}
+
+function renderKPIs(rows){
+  const s=k=>rows.reduce((a,r)=>a+(r[k]||0),0);
+  const vc=s("vc"),va=s("va"),lb=s("lb"),imp=s("imp"),ll=s("ll");
+  document.getElementById("ped-badge").textContent=rows.length.toLocaleString("pt-BR")+" pedidos";
+  document.getElementById("kpi-row").innerHTML=[
+    {l:"Pedidos",v:rows.length.toLocaleString("pt-BR"),c:"var(--muted)"},
+    {l:"Valor Cliente",v:fmt(vc),c:"var(--blue)"},{l:"Valor App",v:fmt(va),c:"var(--purple)"},
+    {l:"Lucro Bruto",v:fmt(lb),c:"var(--green)"},{l:`Imposto ${taxRate}%`,v:fmt(imp),c:"var(--amber)"},
+    {l:"Lucro Líquido",v:fmt(ll),c:"var(--teal)"},
+  ].map(k=>`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-val" style="color:${k.c}">${k.v}</div></div>`).join("");
+}
+
+function renderBar(rows){
+  const map={};
+  rows.forEach(r=>{if(!map[r.cliente])map[r.cliente]={n:r.cliente,vc:0,va:0,lb:0,imp:0,ll:0};map[r.cliente].vc+=r.vc;map[r.cliente].va+=r.va;map[r.cliente].lb+=r.lb;map[r.cliente].imp+=r.imp;map[r.cliente].ll+=r.ll;});
+  const data=Object.values(map).sort((a,b)=>b.vc-a.vc).slice(0,14);
+  const labels=data.map(d=>d.n.replace("Furacão ","F. ").replace("Cobra ","C. "));
+  document.getElementById("bar-legend").innerHTML=BAR_NAMES.map((n,i)=>`<span class="legend-item"><span class="legend-dot" style="background:${BAR_COLORS[i]}"></span>${n}</span>`).join("");
+  if(barChart)barChart.destroy();
+  barChart=new Chart(document.getElementById("barChart"),{type:"bar",data:{labels,datasets:BAR_KEYS.map((k,i)=>({label:BAR_NAMES[i],data:data.map(d=>+d[k].toFixed(2)),backgroundColor:BAR_COLORS[i],borderRadius:4,borderSkipped:false}))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.parsed.y)}`}}},
+      scales:{x:{ticks:{color:"#7E96AD",font:{size:10},maxRotation:38},grid:{color:"rgba(212,220,233,.7)"}},y:{ticks:{color:"#7E96AD",font:{size:10},callback:v=>"R$"+(v/1000).toFixed(0)+"k"},grid:{color:"rgba(212,220,233,.7)"}}}}});
+}
+
+function renderDonut1(rows){
+  document.getElementById("d1-title").textContent=selApps.length===0?"Distribuição Financeira":selApps.length===1?selApps[0]:selApps.join(" · ");
+  const tVa=rows.reduce((a,r)=>a+r.va,0),tImp=rows.reduce((a,r)=>a+r.imp,0),tLl=rows.reduce((a,r)=>a+r.ll,0),grand=tVa+tImp+tLl;
+  const vals=grand>0?[+(tVa/grand*100).toFixed(1),+(tImp/grand*100).toFixed(1),+(tLl/grand*100).toFixed(1)]:[0,0,0];
+  const raws=[tVa,tImp,tLl];
+  document.getElementById("d1-legend").innerHTML=D1_NAMES.map((n,i)=>`<span class="legend-item"><span class="legend-dot" style="background:${D1_COLORS[i]}"></span>${n} ${vals[i]}%</span>`).join("");
+  if(donut1)donut1.destroy();
+  donut1=new Chart(document.getElementById("donut1"),{type:"doughnut",data:{labels:D1_NAMES,datasets:[{data:vals,backgroundColor:D1_COLORS,borderWidth:2,borderColor:"#fff"}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.toFixed(1)}% (${fmt(raws[c.dataIndex])})`}}}}});
+}
+
+function renderDonut2(rows){
+  const apps=selApps.length?selApps:[...new Set(rows.map(r=>r.app))];
+  const labels=[],vals=[],colors=[],avgs=[];
+  apps.forEach(app=>{const sub=rows.filter(r=>r.app===app);if(!sub.length)return;const avg=+(sub.reduce((a,r)=>a+r.ticket,0)/sub.length).toFixed(2);labels.push(app.replace(" Entregas",""));vals.push(avg);avgs.push(avg);colors.push(APP_COLORS[app]||"#2563EB");});
+  document.getElementById("d2-legend").innerHTML=labels.map((l,i)=>`<span class="legend-item"><span class="legend-dot" style="background:${colors[i]}"></span>${l}</span>`).join("");
+  document.getElementById("ticket-badges").innerHTML=labels.map((l,i)=>`<div class="ticket-badge"><div class="t-dot" style="background:${colors[i]}"></div><div class="t-app">${l}</div><div class="t-val" style="color:${colors[i]}">R$ ${avgs[i].toFixed(2)}</div></div>`).join("");
+  if(donut2)donut2.destroy();
+  donut2=new Chart(document.getElementById("donut2"),{type:"doughnut",data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:2,borderColor:"#fff"}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"58%",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: R$ ${c.parsed.toFixed(2)}`}}}}});
+}
+
+// ── DB INDEPENDENT FILTERS ────────────────────────────────────────────────────
+// Filtros do Banco de Dados são independentes dos filtros do Dashboard
+let dbFilterCol="", dbFilterVal="";
+
+function onDbFilterCol(){
+  const col=document.getElementById("dbf-col").value;
+  dbFilterCol=col;
+  dbFilterVal="";
+  const wrap=document.getElementById("dbf-value-wrap");
+  const hint=document.getElementById("dbf-hint");
+  const btnClear=document.getElementById("btn-db-clear");
+
+  wrap.innerHTML="";
+  wrap.style.display="none";
+  document.getElementById("db-match-count").textContent="";
+  btnClear.style.display="none";
+
+  if(!col){hint.textContent="Selecione uma coluna para filtrar";hint.style.display="";return;}
+  hint.style.display="none";
+
+  if(col==="mes"){
+    // Dropdown com os 12 meses (destaca os que têm dados)
+    const dataMonths=new Set(RAW.map(r=>r.mes).filter(Boolean));
+    const sel=document.createElement("select");
+    sel.className="db-filter-col";
+    sel.style.minWidth="140px";
+    sel.innerHTML='<option value="">— Todos os meses —</option>';
+    MONTHS.forEach(m=>{
+      const opt=document.createElement("option");
+      opt.value=m; opt.textContent=m+(dataMonths.has(m)?"":" (sem dados)");
+      opt.disabled=!dataMonths.has(m);
+      sel.appendChild(opt);
+    });
+    sel.oninput=()=>{dbFilterVal=sel.value;applyDbFilter();};
+    wrap.appendChild(sel);
+  } else if(col==="app"){
+    // Dropdown com apps disponíveis
+    const apps=[...new Set(RAW.map(r=>r.app).filter(Boolean))].sort();
+    const sel=document.createElement("select");
+    sel.className="db-filter-col";
+    sel.style.minWidth="160px";
+    sel.innerHTML='<option value="">— Todos os apps —</option>';
+    apps.forEach(a=>{const opt=document.createElement("option");opt.value=a;opt.textContent=a;sel.appendChild(opt);});
+    sel.oninput=()=>{dbFilterVal=sel.value;applyDbFilter();};
+    wrap.appendChild(sel);
+  } else if(col==="cliente"){
+    // Input de texto com busca livre (contém)
+    const inp=document.createElement("input");
+    inp.type="text"; inp.className="db-filter-input";
+    inp.placeholder="Digite parte do nome do cliente…";
+    inp.oninput=()=>{dbFilterVal=inp.value.trim();applyDbFilter();};
+    wrap.appendChild(inp);
+    setTimeout(()=>inp.focus(),50);
+  }
+
+  wrap.style.display="flex";
+}
+
+function applyDbFilter(){
+  const btnClear=document.getElementById("btn-db-clear");
+  btnClear.style.display=dbFilterVal?"":"none";
+  dbPage=1;
+  renderDB(dbFilteredRows());
+}
+
+function clearDbFilter(){
+  dbFilterCol=""; dbFilterVal="";
+  document.getElementById("dbf-col").value="";
+  document.getElementById("dbf-value-wrap").innerHTML="";
+  document.getElementById("dbf-value-wrap").style.display="none";
+  document.getElementById("btn-db-clear").style.display="none";
+  document.getElementById("db-match-count").textContent="";
+  document.getElementById("dbf-hint").textContent="Selecione uma coluna para filtrar";
+  document.getElementById("dbf-hint").style.display="";
+  dbPage=1;
+  renderDB(dbFilteredRows());
+}
+
+function dbFilteredRows(){
+  // Começa com TODOS os dados (independente dos filtros do Dashboard)
+  let rows=RAW.map(r=>{const imp=+(r.lb*taxRate/100).toFixed(2);return{...r,imp,ll:+(r.lb-imp).toFixed(2)}});
+  if(!dbFilterCol||!dbFilterVal) return rows;
+  const val=dbFilterVal.toLowerCase();
+  if(dbFilterCol==="mes")     return rows.filter(r=>r.mes===dbFilterVal);
+  if(dbFilterCol==="app")     return rows.filter(r=>r.app===dbFilterVal);
+  if(dbFilterCol==="cliente") return rows.filter(r=>r.cliente.toLowerCase().includes(val));
+  return rows;
+}
+
+function renderDB(rows){
+  const total=rows.length,pages=Math.ceil(total/DB_PS)||1;
+  if(dbPage>pages)dbPage=1;
+  const slice=rows.slice((dbPage-1)*DB_PS,dbPage*DB_PS);
+  const totalAll=dbFilteredRows().length;
+  const filterDesc=dbFilterCol&&dbFilterVal?` · filtro: ${dbFilterVal}`:"";
+  document.getElementById("db-info").textContent=`${total.toLocaleString("pt-BR")} registros${filterDesc} · Página ${dbPage} de ${pages}`;
+  document.getElementById("db-match-count").textContent=dbFilterCol&&dbFilterVal?`${total.toLocaleString("pt-BR")} resultado(s)`:"";
+  const pc=app=>app==="99 Entregas"?"pill-99":app==="Lalamove"?"pill-lala":"pill-uber";
+  document.getElementById("db-body").innerHTML=slice.length
+    ?slice.map(r=>`<tr><td style="color:var(--muted);font-weight:500">${r.mes}</td><td class="mono">${r.id}</td><td><span class="pill ${pc(r.app)}">${r.app}</span></td><td style="color:var(--blue);font-weight:500">${fmt(r.vc)}</td><td>${fmt(r.va)}</td><td style="color:var(--green);font-weight:500">${fmt(r.lb)}</td><td style="color:var(--amber)">${fmt(r.imp)}</td><td style="color:var(--teal);font-weight:500">${fmt(r.ll)}</td><td>${r.cliente}</td><td style="text-align:center;color:var(--muted)">${r.qtd}</td><td>${fmt(r.ticket)}</td><td class="mono" style="color:var(--muted)">${r.data}</td></tr>`).join("")
+    :`<tr><td colspan="12" class="empty-td">Sem dados para os filtros selecionados.</td></tr>`;
+  const pns=[...new Set([1,Math.max(1,dbPage-1),dbPage,Math.min(pages,dbPage+1),pages])].filter(p=>p>=1&&p<=pages).sort((a,b)=>a-b);
+  document.getElementById("pager").innerHTML=pns.map(p=>`<button class="pg-btn${p===dbPage?" active":""}" onclick="goPage(${p})">${p}</button>`).join("");
+}
+function goPage(p){dbPage=p;renderDB(dbFilteredRows())}
+
+function renderImportSummary(){
+  const el=document.getElementById("imp-sum-content");
+  if(!realImported||!importLog.length){
+    el.innerHTML='<p style="color:var(--muted);font-size:13px">Nenhum dado real importado. Os gráficos estão exibindo dados de exemplo.</p>';
+    return;
+  }
+  const total=RAW.length;
+  el.innerHTML=`
+    <table class="imp-sum-table">
+      <thead><tr><th>App</th><th>Mês</th><th>Arquivo</th><th>Registros</th><th></th></tr></thead>
+      <tbody>
+        ${importLog.map((l,i)=>`<tr>
+          <td><span class="pill imp-badge ${l.app==="99 Entregas"?"imp-99":l.app==="Lalamove"?"imp-lala":"imp-uber"}" style="padding:2px 8px">${l.app}</span></td>
+          <td style="font-weight:600;color:var(--blue)">${l.mes}</td>
+          <td style="color:var(--muted);font-size:11px">${l.filename}</td>
+          <td style="font-weight:600">${l.count.toLocaleString("pt-BR")}</td>
+          <td><button class="btn-del" onclick="removeImport(${i})">✕ Remover</button></td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)">
+      Total: <strong style="color:var(--text)">${total.toLocaleString("pt-BR")} registros</strong> carregados
+    </div>`;
+}
+
+function removeImport(i){
+  const entry=importLog[i];
+  // Remove rows from RAW matching this import by a stored key (app+mes+file)
+  RAW=RAW.filter(r=>!(r._importKey===entry.key));
+  importLog.splice(i,1);
+  if(!importLog.length){RAW=gerarSample();realImported=false;clearLocal();document.getElementById('btn-export').style.display='none';}else{saveLocal();}
+  buildDropdowns();selApps=[];selMeses=[];selClis=[];render();
+  renderImportSummary();
+  document.getElementById("tabs-right").textContent=realImported?RAW.length.toLocaleString("pt-BR")+" registros carregados":"Dados de exemplo · Vá em \"Importar Dados\" para carregar suas planilhas";
+}
+
+// ── DROP ZONE EVENTS ───────────────────────────────────────────────────────────
+function ev(e,s){e.preventDefault();document.getElementById("zone-"+s).classList.add("drag")}
+function lv(s){document.getElementById("zone-"+s).classList.remove("drag")}
+function dp(e,s){e.preventDefault();lv(s);const f=e.dataTransfer.files[0];if(f)parseFile(f,s)}
+function load(e,s){const f=e.target.files[0];if(f)parseFile(f,s);e.target.value=""}
+
+function confirmarLimpar(){
+  if(!confirm("Apagar todos os dados importados e voltar para os dados de exemplo?"))return;
+  RAW=gerarSample();realImported=false;importLog=[];clearLocal();document.getElementById('btn-export').style.display='none';setSheetsStatus('disconnected','Não conectado');
+  buildDropdowns();selApps=[];selMeses=[];selClis=[];render();
+  renderImportSummary();
+  ["99","lala","uber"].forEach(s=>{
+    document.getElementById("zone-"+s).classList.remove("done","err");
+    document.getElementById("zst-"+s).className="dz-status";
+    document.getElementById("zst-"+s).textContent="";
+    document.getElementById("ztxt-"+s).textContent="Clique ou arraste o arquivo";
+  });
+  document.getElementById("tabs-right").textContent='Dados de exemplo · Vá em "Importar Dados" para carregar suas planilhas';
+}
+
+// ── FILE PARSING ─────────────────────────────────────────────────────────────
+// Detecção SEMPRE por nome de coluna — nunca por índice fixo
+// Suporta variações entre meses confirmadas com arquivos reais
+
+function findCol(hdrs, ...keywords){
+  // Busca case-insensitive, normaliza espaços duplos
+  for(const kw of keywords){
+    const k=kw.toLowerCase().replace(/\s+/g,' ').trim();
+    // 1. Exact match (após normalização)
+    let i=hdrs.findIndex(h=>h.toLowerCase().replace(/\s+/g,' ').trim()===k);
+    if(i>=0) return i;
+    // 2. Contains match
+    i=hdrs.findIndex(h=>h.toLowerCase().replace(/\s+/g,' ').includes(k));
+    if(i>=0) return i;
+  }
+  return -1;
+}
+
+function fmtDateVal(v){
+  if(!v||v===""||v==="null") return "";
+  if(v instanceof Date) return isNaN(v)?"":p2(v.getDate())+"/"+p2(v.getMonth()+1)+"/"+v.getFullYear();
+  if(typeof v==="number"&&v>1){try{const d=XLSX.SSF.parse_date_code(v);if(d)return p2(d.d)+"/"+p2(d.m)+"/"+d.y;}catch(e){}}
+  const s=String(v).trim();
+  const iso=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso) return iso[3]+"/"+iso[2]+"/"+iso[1];
+  if(/^\d{1,2}\/\d{1,2}\/\d{4}/.test(s)) return s.substring(0,10);
+  const d=new Date(s);
+  return isNaN(d)?"":p2(d.getDate())+"/"+p2(d.getMonth()+1)+"/"+d.getFullYear();
+}
+
+function parseFile(file, slot){
+  const zone   = document.getElementById("zone-"+slot);
+  const stEl   = document.getElementById("zst-"+slot);
+  const txEl   = document.getElementById("ztxt-"+slot);
+  const mesSel = document.getElementById("mes-"+slot).value;
+
+  zone.classList.remove("drag","done","err");
+  stEl.className="dz-status"; stEl.textContent="Lendo…";
+
+  if(!mesSel){
+    zone.classList.add("err");
+    stEl.className="dz-status err";
+    stEl.textContent="⚠️ Selecione o mês antes de carregar o arquivo.";
+    return;
+  }
+
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const wb=XLSX.read(ev.target.result,{type:"binary",cellDates:true});
+      // Pick sheet with most data rows (not always the first)
+      const ws=(()=>{
+        let best=wb.SheetNames[0], bestRows=0;
+        wb.SheetNames.forEach(name=>{
+          const s=wb.Sheets[name];
+          const ref=s['!ref'];
+          if(!ref)return;
+          const range=XLSX.utils.decode_range(ref);
+          const rows=range.e.r-range.s.r;
+          if(rows>bestRows){bestRows=rows;best=name;}
+        });
+        return wb.Sheets[best];
+      })();
+      // raw:false → preserva números grandes (ex: Lalamove 19 dígitos) como string exata
+      // cellDates:true garante que datas ainda vêm como objetos Date
+      const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:false});
+
+      // Linha de cabeçalho = a com mais células que parecem NOMES de coluna
+      // (texto com letras, não números nem datas puras)
+      // Isso evita confundir uma linha de dados com o header
+      function looksLikeHeader(v){
+        const s=String(v||"").trim();
+        if(!s) return false;
+        if(/^\d+\.?\d*$/.test(s)) return false;          // puramente numérico
+        if(/^\d{4}-\d{2}-\d{2}/.test(s)) return false;  // data ISO
+        if(/^\d{1,2}\/\d{1,2}\/\d{4}/.test(s)) return false; // data BR
+        if(v instanceof Date) return false;               // objeto Date
+        return /[a-zA-ZÀ-ɏ_]/.test(s);         // tem pelo menos uma letra
+      }
+      let hi=0,hiBest=0;
+      for(let i=0;i<Math.min(20,raw.length);i++){
+        const n=raw[i].filter(c=>looksLikeHeader(c)).length;
+        if(n>hiBest){hiBest=n;hi=i;}
+      }
+      const hdrs=raw[hi].map(c=>String(c||"").trim());
+      const data=raw.slice(hi+1).filter(r=>r.some(c=>String(c||"").trim().length>0));
+
+      const mes=mesSel;
+      const key=slot+"|"+mes+"|"+file.name;
+
+      // Open column mapper instead of parsing directly
+      openMapper(slot,mes,file,hdrs,data,key);
+      return; // parsing happens in confirmMapper → _parseWithMap
+
+      // ═══════════════════════════════════════════════════════════════
+      // 99 ENTREGAS (legacy — now handled by _parseWithMap)
+      // Variações confirmadas:
+      //   Janeiro:   Cliente=[5]  | Valor Frete=[11] | Valor total=[12]
+      //   Fevereiro: CLIENTE=[22] | charged_price=[10] | sem Valor total
+      // ═══════════════════════════════════════════════════════════════
+      if(slot==="99"){
+        const iId  = findCol(hdrs,"order_id","order id");
+        // Cliente: tenta "CLIENTE" exato primeiro (Fev), depois "Cliente" (Jan)
+        const iCli = findCol(hdrs,"CLIENTE","Cliente","cliente");
+        // Valor App: "Valor Frete"/"Valor  Frete" (Jan) ou "charged_price" (Fev)
+        const iVa  = findCol(hdrs,"valor frete","valor  frete","charged_price","valor app","frete");
+        // Valor Cliente: "Valor total" (Jan) — pode não existir em outros meses
+        const iVc  = findCol(hdrs,"valor total");
+        // Data: finish_time_br ou initial_call_time_br
+        const iDt  = findCol(hdrs,"finish_time_br","finish_time","initial_call_time","call_time_br");
+
+        if(iCli<0) throw new Error("Coluna de cliente não encontrada.\nEsperado: 'Cliente' ou 'CLIENTE'\nColunas disponíveis: "+hdrs.slice(0,15).join(", "));
+        if(iVa<0)  throw new Error("Coluna de Valor App não encontrada.\nEsperado: 'Valor Frete' ou 'charged_price'\nColunas disponíveis: "+hdrs.slice(0,15).join(", "));
+
+        if(iVc<0) warn="Coluna 'Valor total' não encontrada — usando Valor App como Valor Cliente.";
+
+        rows=data.filter(r=>r.length>Math.max(iCli,iVa)).map((r,i)=>{
+          const va  = pf(r[iVa]);
+          // Se não tem Valor total (Fev), Valor Cliente = Valor App
+          const vc  = iVc>=0 ? pf(r[iVc]) : va;
+          const cli = cleanCli(r[iCli]);
+          const id  = String(r[iId>=0?iId:3]||"").replace(/\.0$/,"").trim()||("99-"+i);
+          return{id,mes,app:"99 Entregas",vc,va,lb:+(vc-va).toFixed(2),imp:0,ll:0,
+                 cliente:cli,qtd:1,ticket:vc,data:fmtDateVal(r[iDt>=0?iDt:0]),_importKey:key};
+        }).filter(r=>r.va>0&&r.cliente.length>0);
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // LALAMOVE
+      // Variações confirmadas:
+      //   Janeiro:   header linha 1 (linha 0 = legenda) | VALOR CLIENTE=[7]
+      //   Fevereiro: header linha 0 (sem legenda)       | VALOR CLIENTE=[8], sempre vazio
+      //   Nomes das colunas são IGUAIS — só a posição muda (coluna ONLINE PAYMENT extra no Fev)
+      //   → busca por nome resolve automaticamente
+      // ═══════════════════════════════════════════════════════════════
+      else if(slot==="lala"){
+        const iId     = findCol(hdrs,"order id","order_id");
+        const iStatus = findCol(hdrs,"order status","status");
+        const iVa     = findCol(hdrs,"final charge","final_charge");
+        const iVc     = findCol(hdrs,"valor cliente","valor_cliente");
+        const iCli    = findCol(hdrs,"cliente");
+        const iDt     = findCol(hdrs,"created time","created_time","data");
+
+        if(iCli<0) throw new Error("Coluna 'CLIENTE' não encontrada.\nColunas: "+hdrs.slice(0,12).join(", "));
+        if(iVa<0)  throw new Error("Coluna 'FINAL CHARGE' não encontrada.\nColunas: "+hdrs.slice(0,12).join(", "));
+
+        rows=data
+          .filter(r=>String(r[iStatus>=0?iStatus:1]||"").trim()==="Completed")
+          .map((r,i)=>{
+            const va  = pf(r[iVa]);
+            // VALOR CLIENTE: usar apenas valor real da coluna, sem fallback para FINAL CHARGE
+            const vcr = iVc>=0 ? r[iVc] : "";
+            const vc  = (vcr!==""&&vcr!==null&&vcr!==undefined&&pf(vcr)>0) ? pf(vcr) : 0;
+            const cli = cleanCli(r[iCli]);
+            const id  = String(r[iId>=0?iId:0]||"").replace(/\.0$/,"").trim()||("L-"+i);
+            return{id,mes,app:"Lalamove",vc,va,lb:+(vc-va).toFixed(2),imp:0,ll:0,
+                   cliente:cli,qtd:1,ticket:vc,data:fmtDateVal(r[iDt>=0?iDt:10]),_importKey:key};
+          }).filter(r=>r.va>0&&r.cliente.length>0);
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // UBER ENTREGAS
+      // Variações confirmadas:
+      //   Janeiro:   tem coluna 'CLIENTE' [11]
+      //   Fevereiro: SEM coluna 'CLIENTE' → usar 'Nome do convidado' [59]
+      //              ou concatenar 'Nome' [11] + 'Sobrenome' [12]
+      //   Colunas estáveis: ID [0], Timestamp [1], Tipo transação [27], Valor total BRL [44]
+      // ═══════════════════════════════════════════════════════════════
+      else if(slot==="uber"){
+        const iId    = findCol(hdrs,"id da viagem","trip id","uber eats");
+        const iVc    = findCol(hdrs,"valor total / real","valor total/real","valor cliente","valor_cliente");
+        const iDt    = findCol(hdrs,"registro de data e hora","transação (utc)","transaction timestamp");
+        const iTipo  = findCol(hdrs,"tipo de transação","tipo de transac","transaction type");
+        const iVa    = findCol(hdrs,"valor total: brl","valor total:brl","total: brl","valor total brl");
+        // Cliente: Janeiro tem 'CLIENTE', Fevereiro não tem → usa 'Nome do convidado'
+        const iCli        = findCol(hdrs,"CLIENTE");
+        const iNomeConv   = findCol(hdrs,"nome do convidado","guest first name");
+        const iNome       = findCol(hdrs,"nome","first name");
+        const iSobrenome  = findCol(hdrs,"sobrenome","last name");
+
+        if(iVa<0) throw new Error("Coluna de valor não encontrada.\nEsperado: 'Valor total: BRL'\nColunas: "+hdrs.slice(40,50).join(", "));
+
+        // Função para extrair cliente conforme o formato disponível
+        const getCli=(r)=>{
+          if(iCli>=0 && cleanCli(r[iCli]).length>0) return cleanCli(r[iCli]);
+          if(iNomeConv>=0 && cleanCli(r[iNomeConv]).length>0) return cleanCli(r[iNomeConv]);
+          const nome=(iNome>=0?String(r[iNome]||""):"").trim();
+          const sob =(iSobrenome>=0?String(r[iSobrenome]||""):"").trim();
+          return cleanCli((nome+" "+sob).trim());
+        };
+
+        rows=data
+          .filter(r=>{
+            const tipo=String(r[iTipo>=0?iTipo:27]||"").trim();
+            return tipo==="Fare"||tipo===""; // excluir 'Adjustment'
+          })
+          .map((r,i)=>{
+            const va  = pf(r[iVa]);
+            const cli = getCli(r);
+            const id  = String(r[iId>=0?iId:0]||"").replace(/\.0$/,"").trim()||("U-"+i);
+            const vc = (iVc>=0 && pf(r[iVc])>0) ? pf(r[iVc]) : 0;
+            const lb = vc>0 ? +(vc-va).toFixed(2) : 0;
+            return{id,mes,app:"Uber Entregas",vc,va,lb,imp:0,ll:0,
+                   cliente:cli,qtd:1,ticket:vc||va,data:fmtDateVal(r[iDt>=0?iDt:1]),_importKey:key};
+          }).filter(r=>r.va>0&&r.cliente.length>0);
+      }
+
+      if(!rows.length){
+        zone.classList.add("err");
+        stEl.className="dz-status err";
+        stEl.textContent="Nenhuma linha válida encontrada. Verifique o arquivo.";
+        return;
+      }
+
+      // Limpar amostra no primeiro import real
+      if(!realImported){RAW=[];realImported=true;}
+
+      // Substituir dados da mesma chave (mesmo app+mês+arquivo)
+      RAW=RAW.filter(r=>r._importKey!==key);
+
+      // Deduplicar por ID global
+      const existingIds=new Set(RAW.map(r=>r.id));
+      const newRows=rows.filter(r=>!existingIds.has(r.id));
+      const dupCount=rows.length-newRows.length;
+      RAW=[...RAW,...newRows];
+
+      // Atualizar log
+      const appName=slot==="99"?"99 Entregas":slot==="lala"?"Lalamove":"Uber Entregas";
+      const existIdx=importLog.findIndex(l=>l.key===key);
+      const logEntry={app:appName,mes,filename:file.name,count:newRows.length,key};
+      if(existIdx>=0) importLog[existIdx]=logEntry; else importLog.push(logEntry);
+
+      zone.classList.add("done");
+      txEl.textContent=file.name;
+      stEl.className="dz-status ok";
+      let msg=`✓ ${newRows.length.toLocaleString("pt-BR")} registros (${mes})`;
+      if(dupCount>0) msg+=` · ${dupCount} já existentes`;
+      if(warn) msg+=` ⚠️ ${warn}`;
+      stEl.textContent=msg;
+
+      selApps=[];selMeses=[];selClis=[];
+      buildDropdowns();dbPage=1;render();
+      renderImportSummary();
+      document.getElementById("tabs-right").textContent=RAW.length.toLocaleString("pt-BR")+" registros carregados";
+    document.getElementById("btn-supa-save").style.display="flex";
+    document.getElementById("btn-export").style.display="flex";
+
+    }catch(err){
+      zone.classList.add("err");
+      stEl.className="dz-status err";
+      stEl.textContent="Erro: "+err.message;
+      console.error(err);
+    }
+  };
+  reader.onerror=()=>{zone.classList.add("err");stEl.className="dz-status err";stEl.textContent="Falha ao ler o arquivo"};
+  reader.readAsBinaryString(file);
+}
+
+
+
+// ── SUPABASE INTEGRATION ──────────────────────────────────────────────────────
+const SUPA_URL = "https://ffcrxkygkecqqlxwnfdj.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmY3J4a3lna2VjcXFseHduZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDY5ODYsImV4cCI6MjA5Mjg4Mjk4Nn0.3-HSlnDapf8LTTpmcJIzbjDgWF3yX_X4MX-rgqoXgEk";
+const SUPA_HDR = {
+  "apikey":        SUPA_KEY,
+  "Authorization": "Bearer " + SUPA_KEY,
+  "Content-Type":  "application/json",
+  "Prefer":        "return=minimal"
+};
+
+function setSupaStatus(type, text){
+  const el = document.getElementById("supa-status");
+  el.className = "supa-status " + type;
+  const dot = type==="loading" ? '<span class="supa-pulse"></span>' : "";
+  el.innerHTML = dot + "<span>" + text + "</span>";
+}
+
+function setSupaProgress(pct){
+  const wrap = document.getElementById("supa-progress");
+  const bar  = document.getElementById("supa-bar");
+  wrap.style.display = pct >= 0 && pct < 100 ? "block" : "none";
+  bar.style.width = pct + "%";
+}
+
+// Load all data from Supabase
+async function supaLoad(){
+  const btn = document.getElementById("btn-supa-load");
+  btn.disabled = true;
+  setSupaStatus("loading","Carregando…");
+  document.getElementById("supa-info").textContent = "Buscando dados do servidor…";
+  setSupaProgress(10);
+
+  try{
+    // Fetch in pages of 1000
+    let all = [], offset = 0, pageSize = 1000;
+    while(true){
+      const resp = await fetch(
+        SUPA_URL + "/rest/v1/pedidos?select=mes,order_id,operacao,valor_cliente,valor_app,lucro_bruto,imposto,lucro_liquido,cliente,quantidade,ticket,data,import_key&order=id.asc&limit=" + pageSize + "&offset=" + offset,
+        {headers: SUPA_HDR}
+      );
+      if(!resp.ok) throw new Error("Erro " + resp.status + ": " + await resp.text());
+      const page = await resp.json();
+      all = all.concat(page);
+      if(page.length < pageSize) break;
+      offset += pageSize;
+      setSupaProgress(Math.min(90, 10 + (offset/100)));
+    }
+
+    if(!all.length){
+      setSupaStatus("disconnected","Banco vazio");
+      document.getElementById("supa-info").textContent = "Nenhum dado encontrado. Importe arquivos e clique em 'Salvar no Supabase'.";
+      setSupaProgress(-1);
+      btn.disabled = false;
+      return;
+    }
+
+    // Map to RAW format
+    RAW = all.map(r => ({
+      id:       r.order_id || ("SB-"+Math.random()),
+      mes:      r.mes      || "",
+      app:      r.operacao || "",
+      vc:       +r.valor_cliente || 0,
+      va:       +r.valor_app     || 0,
+      lb:       +r.lucro_bruto   || 0,
+      imp:      0, ll: 0,
+      cliente:  r.cliente   || "",
+      qtd:      +r.quantidade|| 1,
+      ticket:   +r.ticket    || 0,
+      data:     r.data       || "",
+      _importKey: r.import_key || "supabase"
+    }));
+
+    realImported = true;
+    setSupaProgress(100);
+    setSupaStatus("connected", "Conectado · " + RAW.length.toLocaleString("pt-BR") + " registros");
+    document.getElementById("supa-info").textContent =
+      RAW.length.toLocaleString("pt-BR") + " registros carregados do Supabase.";
+    document.getElementById("btn-supa-save").style.display = "flex";
+    document.getElementById("btn-export").style.display    = "flex";
+
+    selApps=[]; selMeses=[]; selClis=[];
+    buildDropdowns(); dbPage=1; render();
+    renderImportSummary();
+    document.getElementById("tabs-right").textContent = RAW.length.toLocaleString("pt-BR") + " registros carregados";
+    saveLocal();
+
+  }catch(e){
+    setSupaStatus("disconnected","Erro ao carregar");
+    document.getElementById("supa-info").textContent = "Erro: " + e.message;
+    console.error(e);
+  }finally{
+    btn.disabled = false;
+    setSupaProgress(-1);
+  }
+}
+
+// Save current RAW data to Supabase
+async function supaSave(){
+  if(!realImported || !RAW.length){ alert("Nenhum dado para salvar."); return; }
+  if(!confirm("Isso vai substituir todos os dados no Supabase pelos dados atuais do dashboard. Confirma?")) return;
+
+  const btn = document.getElementById("btn-supa-save");
+  btn.disabled = true;
+  setSupaStatus("loading","Salvando…");
+
+  try{
+    // 1. Delete all existing
+    setSupaProgress(5);
+    const delResp = await fetch(SUPA_URL + "/rest/v1/pedidos?id=gte.0", {
+      method: "DELETE", headers: SUPA_HDR
+    });
+    if(!delResp.ok){
+      const errText = await delResp.text();
+      throw new Error("Erro ao limpar: " + errText);
+    }
+
+    // 2. Insert in batches of 500
+    const rows = RAW.map(r => ({
+      mes:           r.mes     || "",
+      order_id:      r.id      || "",
+      operacao:      r.app     || "",
+      valor_cliente: r.vc      || 0,
+      valor_app:     r.va      || 0,
+      lucro_bruto:   r.lb      || 0,
+      imposto:       0,
+      lucro_liquido: 0,
+      cliente:       r.cliente || "",
+      quantidade:    r.qtd     || 1,
+      ticket:        r.ticket  || 0,
+      data:          r.data    || "",
+      import_key:    r._importKey || ""
+    }));
+
+    const batchSize = 500;
+    const batches   = Math.ceil(rows.length / batchSize);
+    for(let i=0; i<batches; i++){
+      const batch = rows.slice(i*batchSize, (i+1)*batchSize);
+      const insResp = await fetch(SUPA_URL + "/rest/v1/pedidos", {
+        method: "POST",
+        headers: SUPA_HDR,
+        body: JSON.stringify(batch)
+      });
+      if(!insResp.ok){
+        const errText = await insResp.text();
+        throw new Error("Erro ao inserir lote " + (i+1) + ": " + errText);
+      }
+      setSupaProgress(10 + Math.round(((i+1)/batches)*85));
+    }
+
+    setSupaProgress(100);
+    setSupaStatus("connected", "Salvo · " + rows.length.toLocaleString("pt-BR") + " registros");
+    document.getElementById("supa-info").textContent =
+      "✓ " + rows.length.toLocaleString("pt-BR") + " registros salvos no Supabase. Qualquer pessoa pode carregar agora.";
+
+  }catch(e){
+    setSupaStatus("disconnected","Erro ao salvar");
+    document.getElementById("supa-info").textContent = "Erro: " + e.message;
+    console.error(e);
+  }finally{
+    btn.disabled = false;
+    setTimeout(()=>setSupaProgress(-1), 1500);
+  }
+}
+
+// Delete all data from Supabase
+async function supaClear(){
+  if(!confirm("Apagar TODOS os dados do Supabase? Isso afeta todos os usuários.")) return;
+  setSupaStatus("loading","Apagando…");
+  try{
+    const resp = await fetch(SUPA_URL + "/rest/v1/pedidos?id=gte.0", {
+      method: "DELETE", headers: SUPA_HDR
+    });
+    if(!resp.ok) throw new Error(await resp.text());
+    setSupaStatus("disconnected","Banco vazio");
+    document.getElementById("supa-info").textContent = "Dados apagados do Supabase.";
+  }catch(e){
+    setSupaStatus("disconnected","Erro");
+    document.getElementById("supa-info").textContent = "Erro: " + e.message;
+  }
+}
+
+// Auto-show save button when data is imported
+const _origSaveLocal = saveLocal;
+function saveLocal(){
+  _origSaveLocal();
+  if(realImported && RAW.length) document.getElementById("btn-supa-save").style.display = "flex";
+}
+
+
+// ── LOCALSTORAGE ──────────────────────────────────────────────────────────────
+const LS_KEY = 'fme_dashboard_v6';
+
+function saveLocal(){
+  try{
+    const payload={RAW,importLog,taxRate,savedAt:new Date().toISOString()};
+    localStorage.setItem(LS_KEY,JSON.stringify(payload));
+    const d=new Date(payload.savedAt);
+    const txt=`Salvo ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${d.toLocaleDateString('pt-BR')}`;
+    document.getElementById("save-txt").textContent=txt;
+    document.getElementById("save-indicator").style.display='flex';
+  }catch(e){console.warn('localStorage save failed:',e);}
+}
+
+function loadLocal(){
+  try{
+    const saved=localStorage.getItem(LS_KEY);
+    if(!saved)return false;
+    const d=JSON.parse(saved);
+    if(d.RAW&&d.RAW.length>0){
+      RAW=d.RAW;importLog=d.importLog||[];taxRate=d.taxRate||12;
+      realImported=true;
+      return d.savedAt;
+    }
+  }catch(e){console.warn('localStorage load failed:',e);}
+  return false;
+}
+
+function clearLocal(){
+  localStorage.removeItem(LS_KEY);
+  document.getElementById("save-indicator").style.display='none';
+}
+
+// Saved column mappings per slot
+function getSavedMapping(slot){
+  try{return JSON.parse(localStorage.getItem('fme_map_'+slot)||'null');}catch(e){return null;}
+}
+function saveMapping(slot,map){
+  try{localStorage.setItem('fme_map_'+slot,JSON.stringify(map));}catch(e){}
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────────
+function exportData(){
+  if(!realImported||!RAW.length){alert("Nenhum dado real importado.");return}
+  const rows=RAW.map(r=>{
+    const imp=+(r.lb*taxRate/100).toFixed(2);
+    const ll=+(r.lb-imp).toFixed(2);
+    return[r.mes,r.id,r.app,r.vc,r.va,r.lb,imp,ll,r.cliente,r.qtd,r.ticket,r.data];
+  });
+  const ws=XLSX.utils.aoa_to_sheet([
+    ["Mês","Order ID","Operação","Valor Cliente","Valor App","Lucro Bruto","Imposto","Lucro Líquido","Cliente","Quantidade","Ticket","Data"],
+    ...rows
+  ]);
+  ws["!cols"]=[{wch:12},{wch:22},{wch:16},{wch:14},{wch:14},{wch:14},{wch:12},{wch:14},{wch:24},{wch:9},{wch:12},{wch:12}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"FME Dados");
+  const hoje=new Date().toLocaleDateString("pt-BR").replace(/\//g,"-");
+  XLSX.writeFile(wb,`FME_Dashboard_${hoje}.xlsx`);
+}
+
+// ── COLUMN MAPPER ─────────────────────────────────────────────────────────────
+let _mapperCtx=null; // {slot, mes, file, hdrs, data, key}
+
+const FIELD_DEFS=[
+  {id:"iId",  label:"Order ID",      required:false, hint:"Identificador único do pedido", keywords:["order_id","order id","id da viagem","trip id","id pedido"]},
+  {id:"iCli", label:"Cliente",       required:true,  hint:"Nome do cliente / empresa",     keywords:["cliente","client"]},
+  {id:"iVa",  label:"Valor App",     required:true,  hint:"Valor pago ao app (frete/tarifa)", keywords:["valor frete","valor  frete","charged_price","final charge","final_charge","valor total: brl","valor total:brl","frete"]},
+  {id:"iVc",  label:"Valor Cliente", required:false, hint:"Valor cobrado do cliente (opcional)", keywords:["valor total / real","valor total/real","valor cliente","valor_cliente"]},
+  {id:"iDt",  label:"Data",          required:false, hint:"Data/hora do pedido",           keywords:["finish_time_br","initial_call_time","created time","created_time","registro de data","data da solicitacao","data solicit"]},
+];
+
+function openMapper(slot,mes,file,hdrs,data,key){
+  _mapperCtx={slot,mes,file,hdrs,data,key};
+
+  const appName=slot==="99"?"99 Entregas":slot==="lala"?"Lalamove":"Uber Entregas";
+  document.getElementById("mapper-title").textContent="Mapeamento de colunas — "+appName;
+  document.getElementById("mapper-sub").textContent=`Arquivo: ${file.name}  ·  ${data.length.toLocaleString("pt-BR")} linhas detectadas  ·  Mês: ${mes}`;
+  document.getElementById("mapper-info").innerHTML=`
+    <span>📋 ${hdrs.length} colunas no arquivo</span>
+    <span>📅 Mês selecionado: <strong>${mes}</strong></span>
+  `;
+
+  // Uber warning
+  const warnEl=document.getElementById("mapper-warn");
+  if(slot==="uber"){
+    warnEl.textContent="⚠️ O relatório Uber não inclui o Valor Cliente — esse campo ficará R$ 0,00.";
+    warnEl.style.display="";
+  } else {
+    warnEl.style.display="none";
+  }
+
+  // Load saved mapping for this slot
+  const saved=getSavedMapping(slot)||{};
+
+  // Build mapper grid
+  const grid=document.getElementById("mapper-grid");
+  grid.innerHTML="";
+  FIELD_DEFS.forEach(f=>{
+    const div=document.createElement("div");
+    div.className="mapper-field";
+    div.innerHTML=`
+      <label for="mf-${f.id}">${f.label}${f.required?'<span>*</span>':''} <em>— ${f.hint}</em></label>
+      <select class="mapper-sel" id="mf-${f.id}">
+        <option value="-1">— não mapeado —</option>
+        ${hdrs.map((h,i)=>`<option value="${i}">${i}: ${h}</option>`).join("")}
+      </select>`;
+    grid.appendChild(div);
+
+    const sel=div.querySelector("select");
+    // Priority: 1) saved mapping, 2) auto-detect by keywords
+    let best=-1;
+    if(saved[f.id]!==undefined && saved[f.id]>=0 && saved[f.id]<hdrs.length){
+      best=saved[f.id];
+    } else {
+      for(const kw of f.keywords){
+        const k=kw.toLowerCase().replace(/\s+/g," ").trim();
+        let i=hdrs.findIndex(h=>h.toLowerCase().replace(/\s+/g," ").trim()===k);
+        if(i<0)i=hdrs.findIndex(h=>h.toLowerCase().replace(/\s+/g," ").includes(k));
+        if(i>=0){best=i;break;}
+      }
+    }
+    sel.value=best;
+    if(best>=0)sel.classList.add("matched");
+    sel.addEventListener("change",()=>{sel.classList.toggle("matched",sel.value!==-1&&sel.value!=="-1")});
+  });
+
+  // Preview first 3 data rows
+  buildMapperPreview(hdrs,data);
+
+  document.getElementById("mapper-overlay").classList.add("open");
+}
+
+function buildMapperPreview(hdrs,data){
+  const prev=document.getElementById("mapper-preview");
+  const slice=data.slice(0,3);
+  if(!slice.length){prev.style.display="none";return;}
+  prev.style.display="";
+  // Show first 8 columns
+  const showCols=Math.min(8,hdrs.length);
+  prev.innerHTML=`<div class="mapper-preview-title">Prévia das primeiras linhas</div>
+    <table>
+      <thead><tr>${hdrs.slice(0,showCols).map(h=>`<th>${h}</th>`).join("")}${hdrs.length>showCols?`<th>+${hdrs.length-showCols}</th>`:""}</tr></thead>
+      <tbody>${slice.map(r=>`<tr>${r.slice(0,showCols).map(c=>`<td>${String(c||"").substring(0,18)}</td>`).join("")}${hdrs.length>showCols?"<td>…</td>":""}</tr>`).join("")}</tbody>
+    </table>`;
+}
+
+function closeMapper(){
+  document.getElementById("mapper-overlay").classList.remove("open");
+  _mapperCtx=null;
+}
+
+function confirmMapper(){
+  if(!_mapperCtx)return;
+  const {slot,mes,file,hdrs,data,key}=_mapperCtx;
+
+  // Read field assignments
+  const map={};
+  let missingRequired=[];
+  FIELD_DEFS.forEach(f=>{
+    const val=parseInt(document.getElementById("mf-"+f.id).value);
+    map[f.id]=isNaN(val)?-1:val;
+    if(f.required&&map[f.id]<0)missingRequired.push(f.label);
+  });
+  if(missingRequired.length){alert("Campos obrigatórios não mapeados: "+missingRequired.join(", "));return;}
+
+  // Save mapping if checkbox checked
+  if(document.getElementById("mapper-remember").checked) saveMapping(slot,map);
+
+  closeMapper();
+  _parseWithMap(slot,mes,file,hdrs,data,key,map);
+}
+
+function _parseWithMap(slot,mes,file,hdrs,data,key,map){
+  const zone=document.getElementById("zone-"+slot);
+  const stEl=document.getElementById("zst-"+slot);
+  const txEl=document.getElementById("ztxt-"+slot);
+  let rows=[];
+  let warn="";
+
+  try{
+    if(slot==="99"){
+      if(map.iVc<0)warn="'Valor Cliente' não mapeado — usando Valor App como base.";
+      rows=data.filter(r=>r.length>Math.max(map.iCli,map.iVa)).map((r,i)=>{
+        const va=pf(r[map.iVa]);
+        const vc=map.iVc>=0?pf(r[map.iVc]):va;
+        const cli=cleanCli(r[map.iCli]);
+        const id=map.iId>=0?String(r[map.iId]||"").replace(/\.0$/,"").trim()||("99-"+i):("99-"+i);
+        return{id,mes,app:"99 Entregas",vc,va,lb:+(vc-va).toFixed(2),imp:0,ll:0,
+               cliente:cli,qtd:1,ticket:vc,data:fmtDateVal(r[map.iDt>=0?map.iDt:0]),_importKey:key};
+      }).filter(r=>r.va>0&&r.cliente.length>0);
+    }
+    else if(slot==="lala"){
+      rows=data.filter(r=>String(r[1]||"").trim()==="Completed"||String(r[2]||"").trim()==="Completed"||true)
+        .map((r,i)=>{
+          // Skip canceled
+          const statusCols=[1,2,3].map(c=>String(r[c]||"").trim().toLowerCase());
+          if(statusCols.some(s=>s==="canceled"||s==="cancelled"))return null;
+          const va=pf(r[map.iVa]);
+          const vcr=map.iVc>=0?r[map.iVc]:"";
+          const vc=(vcr!==""&&vcr!==null&&pf(vcr)>0)?pf(vcr):0;
+          const cli=cleanCli(r[map.iCli]);
+          const id=map.iId>=0?String(r[map.iId]||"").replace(/\.0$/,"").trim()||("L-"+i):("L-"+i);
+          return{id,mes,app:"Lalamove",vc,va,lb:+(vc-va).toFixed(2),imp:0,ll:0,
+                 cliente:cli,qtd:1,ticket:vc||va,data:fmtDateVal(r[map.iDt>=0?map.iDt:0]),_importKey:key};
+        }).filter(r=>r&&r.va>0&&r.cliente.length>0);
+    }
+    else if(slot==="uber"){
+      rows=data.map((r,i)=>{
+        const va=pf(r[map.iVa]);
+        const cli=cleanCli(r[map.iCli]);
+        const id=map.iId>=0?String(r[map.iId]||"").replace(/\.0$/,"").trim()||("U-"+i):("U-"+i);
+        return{id,mes,app:"Uber Entregas",vc:(map.iVc>=0&&pf(r[map.iVc])>0)?pf(r[map.iVc]):0,va,
+                  lb:+(((map.iVc>=0&&pf(r[map.iVc])>0)?pf(r[map.iVc]):0)-pf(r[map.iVa])).toFixed(2),imp:0,ll:0,
+               cliente:cli,qtd:1,ticket:va,data:fmtDateVal(r[map.iDt>=0?map.iDt:0]),_importKey:key};
+      }).filter(r=>r.va>0&&r.cliente.length>0);
+    }
+
+    if(!rows.length){
+      zone.classList.add("err");
+      stEl.className="dz-status err";
+      stEl.textContent="Nenhuma linha válida. Verifique o mapeamento.";
+      return;
+    }
+
+    // Clear sample on first real import
+    if(!realImported){RAW=[];realImported=true;}
+    RAW=RAW.filter(r=>r._importKey!==key);
+    const existingIds=new Set(RAW.map(r=>r.id));
+    const newRows=rows.filter(r=>!existingIds.has(r.id));
+    const dupCount=rows.length-newRows.length;
+    RAW=[...RAW,...newRows];
+
+    const appName=slot==="99"?"99 Entregas":slot==="lala"?"Lalamove":"Uber Entregas";
+    const existIdx=importLog.findIndex(l=>l.key===key);
+    const logEntry={app:appName,mes,filename:file.name,count:newRows.length,key};
+    if(existIdx>=0)importLog[existIdx]=logEntry;else importLog.push(logEntry);
+
+    zone.classList.add("done");
+    txEl.textContent=file.name;
+    stEl.className="dz-status ok";
+    let msg=`✓ ${newRows.length.toLocaleString("pt-BR")} registros (${mes})`;
+    if(dupCount>0)msg+=` · ${dupCount} já existentes`;
+    if(warn)msg+=` ⚠️ ${warn}`;
+    stEl.textContent=msg;
+
+    selApps=[];selMeses=[];selClis=[];
+    buildDropdowns();dbPage=1;render();
+    renderImportSummary();
+    document.getElementById("tabs-right").textContent=RAW.length.toLocaleString("pt-BR")+" registros carregados";
+    document.getElementById("btn-supa-save").style.display="flex";
+    document.getElementById("btn-export").style.display="flex";
+    document.getElementById("btn-export").style.display="flex";
+
+    // Auto-save to localStorage
+    saveLocal();
+
+  }catch(err){
+    zone.classList.add("err");
+    stEl.className="dz-status err";
+    stEl.textContent="Erro: "+err.message;
+    console.error(err);
+  }
+}
+
+// ── GOOGLE SHEETS INTEGRATION ────────────────────────────────────────────────
+const LS_SHEETS_URL      = 'fme_sheets_url';
+const LS_SHEETS_INTERVAL = 'fme_sheets_interval';
+let _syncTimer = null;
+let _syncing   = false;
+
+// ── Template download ─────────────────────────────────────────────────────────
+function downloadTemplate(){
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["Mês","Order ID","Operação","Valor Cliente","Valor App","Lucro Bruto","Imposto","Lucro Líquido","Cliente","Quantidade","Ticket","Data"],
+    ["Janeiro","ORD-001","99 Entregas",85.50,52.30,33.20,3.98,29.22,"Cobra Campinas",1,85.50,"05/01/2026"],
+    ["Janeiro","ORD-002","Lalamove",120.00,76.40,43.60,5.23,38.37,"Furacão Cambuci",1,120.00,"12/01/2026"],
+    ["Janeiro","ORD-003","Uber Entregas",0,45.80,0,0,0,"Axalta",1,45.80,"20/01/2026"],
+  ]);
+  ws["!cols"]=[{wch:12},{wch:22},{wch:16},{wch:14},{wch:14},{wch:14},{wch:12},{wch:14},{wch:24},{wch:9},{wch:12},{wch:12}];
+  // Highlight header row
+  const range=XLSX.utils.decode_range(ws["!ref"]);
+  for(let c=range.s.c;c<=range.e.c;c++){
+    const addr=XLSX.utils.encode_cell({r:0,c});
+    if(!ws[addr])continue;
+    ws[addr].s={fill:{fgColor:{rgb:"2563EB"}},font:{color:{rgb:"FFFFFF"},bold:true}};
+  }
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"FME Dados");
+  XLSX.writeFile(wb,"FME_Template.xlsx");
+}
+
+// ── URL helpers ───────────────────────────────────────────────────────────────
+function normalizeSheetUrl(url){
+  // Accept: published CSV URL, edit URL, view URL
+  // Returns: CSV fetch URL or throws
+  const s = url.trim();
+
+  // Already a published CSV URL → use as-is
+  if(s.includes('/pub') && s.includes('output=csv')) return s;
+  if(s.includes('/pub') && s.includes('output=csv&')) return s;
+
+  // Edit/view URL → convert to export CSV URL
+  // Requires sheet to be shared "Anyone with the link"
+  const idMatch = s.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if(!idMatch) throw new Error("URL inválida. Use o link de publicação CSV (Arquivo → Publicar na web).");
+  const id  = idMatch[1];
+  const gid = (s.match(/[#&]gid=(\d+)/) || [])[1] || '0';
+  return `https://docs.google.com/spreadsheets/d/${id}/pub?output=csv&gid=${gid}`;
+}
+
+function parseCSVLine(line){
+  // Handles quoted fields with commas inside
+  const result = [];
+  let cur = '', inQ = false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){ inQ=!inQ; continue; }
+    if(c===','&&!inQ){ result.push(cur.trim()); cur=''; continue; }
+    cur+=c;
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function parseSheetCSV(csvText){
+  const lines = csvText.split('\n').map(function(l){return l.replace(/\r$/,'')});
+  if(lines.length<2) throw new Error("Planilha vazia ou sem dados.");
+
+  const hdrs = parseCSVLine(lines[0]);
+  // Expected: Mês | Order ID | Operação | Valor Cliente | Valor App | Lucro Bruto | Imposto | Lucro Líquido | Cliente | Quantidade | Ticket | Data
+  // Check at least 8 columns
+  if(hdrs.length < 8) throw new Error(`Formato inválido. Esperado 12 colunas, encontrado ${hdrs.length}.
+Use o template padrão (baixe em "Baixar template").`);
+
+  const rows = [];
+  for(let i=1;i<lines.length;i++){
+    const line = lines[i].trim();
+    if(!line) continue;
+    const cols = parseCSVLine(line);
+
+    const mes      = cols[0]||"";
+    const id       = cols[1]||`R-${i}`;
+    const app      = cols[2]||"";
+    const vc       = pf(cols[3]);
+    const va       = pf(cols[4]);
+    const lb       = pf(cols[5]) || +(vc-va).toFixed(2);
+    const cliente  = cleanCli(cols[8]);
+    const qtd      = parseInt(cols[9])||1;
+    const ticket   = pf(cols[10])||vc||va;
+    const data     = cols[11]||"";
+
+    // Validate
+    if(!mes||!app||!cliente) continue;
+    if(va<=0&&vc<=0) continue;
+
+    rows.push({id,mes,app,vc,va,lb,imp:0,ll:0,cliente,qtd,ticket,data,_importKey:"sheets"});
+  }
+  return rows;
+}
+
+// ── Connect / Disconnect ──────────────────────────────────────────────────────
+function connectSheets(){
+  const url = document.getElementById("sheets-url-input").value.trim();
+  if(!url){ alert("Cole o link do Google Sheets antes de conectar."); return; }
+  try{
+    const normalized = normalizeSheetUrl(url);
+    localStorage.setItem(LS_SHEETS_URL, normalized);
+    document.getElementById("sheets-url-input").className="sheets-url-input ok";
+    showSheetsConnected(normalized);
+    syncSheets();
+  }catch(e){
+    document.getElementById("sheets-url-input").className="sheets-url-input err";
+    alert("Erro: "+e.message);
+  }
+}
+
+function disconnectSheets(){
+  if(!confirm("Desconectar o Google Sheets? Os dados já carregados continuarão no dashboard."))return;
+  localStorage.removeItem(LS_SHEETS_URL);
+  clearSyncInterval();
+  document.getElementById("sheets-setup-block").style.display="";
+  document.getElementById("sheets-connected-block").style.display="none";
+  setSheetsStatus("disconnected","Não conectado");
+}
+
+function showSheetsConnected(url){
+  document.getElementById("sheets-setup-block").style.display="none";
+  document.getElementById("sheets-connected-block").style.display="";
+  document.getElementById("sheets-url-display").value=url;
+  setSheetsStatus("connected","Conectado");
+  // Restore interval preference
+  const saved=localStorage.getItem(LS_SHEETS_INTERVAL)||"15";
+  document.getElementById("sheets-interval").value=saved;
+  setSyncInterval(saved,false);
+}
+
+function setSheetsStatus(type, text){
+  const el=document.getElementById("sheets-badge");
+  el.className="sheets-badge "+type;
+  const dot=type==="syncing"?'<span class="sheets-pulse"></span>':'';
+  el.innerHTML=dot+'<span>'+text+'</span>';
+}
+
+// ── Sync ──────────────────────────────────────────────────────────────────────
+async function syncSheets(){
+  if(_syncing)return;
+  const url=localStorage.getItem(LS_SHEETS_URL);
+  if(!url)return;
+
+  _syncing=true;
+  const btn=document.getElementById("btn-sync");
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="sheets-pulse" style="background:#fff"></span> Sincronizando…';}
+  setSheetsStatus("syncing","Sincronizando…");
+  document.getElementById("sheets-sync-status").innerHTML='<span style="color:var(--muted)">Buscando dados…</span>';
+
+  try{
+    const resp = await fetch(url, {cache:"no-cache"});
+    if(!resp.ok) throw new Error(`Erro HTTP ${resp.status}. Verifique se a planilha está publicada.`);
+    const csv  = await resp.text();
+    const rows = parseSheetCSV(csv);
+
+    if(!rows.length) throw new Error("Nenhuma linha válida encontrada na planilha.");
+
+    // Replace sheets data
+    if(!realImported){RAW=[];realImported=true;}
+    RAW = [...RAW.filter(r=>r._importKey!=="sheets"), ...rows];
+
+    // Update log
+    const existing=importLog.findIndex(l=>l.key==="sheets");
+    const entry={app:"Google Sheets",mes:"Todos",filename:"Google Sheets",count:rows.length,key:"sheets"};
+    if(existing>=0)importLog[existing]=entry;else importLog.push(entry);
+
+    const now=new Date();
+    const hhmm=now.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+    const ddmm=now.toLocaleDateString("pt-BR");
+    document.getElementById("sheets-last-sync").textContent=`Última sync: ${hhmm} · ${ddmm}`;
+    document.getElementById("sheets-sync-status").innerHTML=
+      `<span style="color:var(--green)">✓ ${rows.length.toLocaleString("pt-BR")} registros carregados</span>`;
+
+    setSheetsStatus("connected","Conectado · "+rows.length.toLocaleString("pt-BR")+" registros");
+    selApps=[];selMeses=[];selClis=[];
+    buildDropdowns();dbPage=1;render();
+    renderImportSummary();
+    document.getElementById("tabs-right").textContent=RAW.length.toLocaleString("pt-BR")+" registros carregados";
+    document.getElementById("btn-supa-save").style.display="flex";
+    document.getElementById("btn-export").style.display="flex";
+    document.getElementById("btn-export").style.display="flex";
+    saveLocal();
+
+  }catch(e){
+    setSheetsStatus("disconnected","Erro na sync");
+    document.getElementById("sheets-sync-status").innerHTML=
+      `<span style="color:var(--red)">✕ ${e.message}</span>`;
+    console.error(e);
+  }finally{
+    _syncing=false;
+    if(btn){btn.disabled=false;btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Sincronizar agora';}
+  }
+}
+
+function setSyncInterval(minutes, save=true){
+  clearSyncInterval();
+  if(save) localStorage.setItem(LS_SHEETS_INTERVAL, minutes);
+  const mins=parseInt(minutes);
+  if(mins>0) _syncTimer=setInterval(syncSheets, mins*60*1000);
+}
+function clearSyncInterval(){
+  if(_syncTimer){clearInterval(_syncTimer);_syncTimer=null;}
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────────
+// ── INIT ───────────────────────────────────────────────────────────────────────
+populateMonthSelectors();
+
+// Try restoring from localStorage first
+const restored = loadLocal();
+if(restored){
+  realImported=true;
+  document.getElementById("tax-range").value=taxRate;
+  document.getElementById("tax-lbl").textContent=taxRate+"%";
+  const d=new Date(restored);
+  const txt=`Salvo ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${d.toLocaleDateString('pt-BR')}`;
+  document.getElementById("save-txt").textContent=txt;
+  document.getElementById("save-indicator").style.display='flex';
+  document.getElementById("tabs-right").textContent=RAW.length.toLocaleString("pt-BR")+" registros carregados";
+  document.getElementById("btn-export").style.display="flex";
+}
+
+buildDropdowns();
+render();
+
+// Auto-load from Supabase on open
+supaLoad();
+
+// Auto-restore Google Sheets connection
+const savedSheetsUrl = localStorage.getItem(LS_SHEETS_URL);
+if(savedSheetsUrl){
+  showSheetsConnected(savedSheetsUrl);
+  syncSheets(); // Sync immediately on load
+}
+</script>
+</body>
+</html>
